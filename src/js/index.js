@@ -2,20 +2,27 @@
 // TODO 1. 메뉴 추가
 // - [v] 메뉴 이름을 입력받고 확인 버튼을 누르면 메뉴를 추가한다.
 // - [v] 메뉴 이름을 입력받고 엔터키 입력으로 메뉴를 추가한다.
-// - [ ] 메뉴가 추가되고 나면, input은 빈 값으로 초기화한다.
-// - [ ] 사용자 입력값이 빈 값이라면 추가되지 않는다.
-// - [ ] 추가되는 메뉴의 아래 마크업은 < ul id = "espresso-menu-list" class="mt-3 pl-0" ></ > 안에 삽입해야 한다.
+// - [v] 메뉴가 추가되고 나면, input은 빈 값으로 초기화한다.
+// - [v] 사용자 입력값이 빈 값이라면 추가되지 않는다.
+// - [v] 추가되는 메뉴의 아래 마크업은 <ul id ="espresso-menu-list" class="mt-3 pl-0" ></ul> 안에 삽입해야 한다.
 
 const form = document.querySelector("#espresso-menu-form")
 const input = document.querySelector("#espresso-menu-name")
 const button = document.querySelector("#espresso-menu-submit-button")
 const list = document.querySelector("#espresso-menu-list")
 
-function addMenu(name) {
+function addMenu() {
+  const menuName = input.value
+  if (!menuName) return
+
   const menuItem = document.createElement("li")
   menuItem.class = "menu-list-item d-flex items-center py-2"
-  menuItem.innerHTML = name
+
+  menuItem.innerHTML = menuName
+
   list.appendChild(menuItem)
+
+  input.value = ""
 }
 
 function App() {
@@ -23,7 +30,7 @@ function App() {
     e.preventDefault()
   })
   button.addEventListener("click", () => {
-    addMenu(input.value)
+    addMenu()
   })
   input.addEventListener("submit", (e) => {
     console.log("submit")
@@ -31,7 +38,7 @@ function App() {
   })
   input.addEventListener("keyup", (e) => {
     if (e.key === "Enter") {
-      addMenu(input.value)
+      addMenu()
     }
   })
 }
