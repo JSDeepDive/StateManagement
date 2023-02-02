@@ -16,7 +16,7 @@ function addMenu() {
   if (!menuName) return
 
   const menuItem = document.createElement("li")
-  menuItem.class = "menu-list-item d-flex items-center py-2"
+  menuItem.className = "menu-list-item d-flex items-center py-2"
 
   menuItem.innerHTML = menuName
 
