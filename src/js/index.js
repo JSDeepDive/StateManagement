@@ -32,10 +32,6 @@ function App() {
   button.addEventListener("click", () => {
     addMenu()
   })
-  input.addEventListener("submit", (e) => {
-    console.log("submit")
-    e.preventDefault()
-  })
   input.addEventListener("keyup", (e) => {
     if (e.key === "Enter") {
       addMenu()
