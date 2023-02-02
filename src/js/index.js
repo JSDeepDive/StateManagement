@@ -4,6 +4,7 @@ const form = document.querySelector("#espresso-menu-form")
 const input = document.querySelector("#espresso-menu-name")
 const button = document.querySelector("#espresso-menu-submit-button")
 const list = document.querySelector("#espresso-menu-list")
+const cnt = document.querySelector(".menu-count")
 let nums = 0
 
 // TODO 1. 메뉴 추가
@@ -14,8 +15,6 @@ let nums = 0
 // - [v] 추가되는 메뉴의 아래 마크업은 <ul id ="espresso-menu-list" class="mt-3 pl-0" ></ul> 안에 삽입해야 한다.
 
 function createElem(item, name) {
-  nums += 1
-
   const span = document.createElement("span")
   span.className = "w-100 pl-2 menu-name"
   span.innerHTML = name
@@ -41,6 +40,12 @@ function createElem(item, name) {
   item.appendChild(remove)
 }
 
+// TODO 4. 기타
+// - [v] 총 메뉴 갯수를 count하여 상단에 보여준다.
+function updateTotal() {
+  cnt.innerHTML = `총 ${nums}개`
+}
+
 function addMenu() {
   const name = input.value
   if (!name) return
@@ -51,6 +56,9 @@ function addMenu() {
   createElem(item, name)
 
   list.appendChild(item)
+
+  nums += 1
+  updateTotal()
 
   input.value = ""
 }
@@ -71,6 +79,8 @@ function removeMenu(item) {
   const ret = confirm("정말 삭제하시겠습니까?")
   if (!ret) return
   list.removeChild(item)
+  nums -= 1
+  updateTotal()
 }
 
 function App() {
@@ -88,6 +98,3 @@ function App() {
 }
 
 App()
-
-// TODO 4. 기타
-// - [ ] 총 메뉴 갯수를 count하여 상단에 보여준다.
