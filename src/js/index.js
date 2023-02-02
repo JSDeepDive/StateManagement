@@ -21,6 +21,9 @@ function createElem(item, name) {
   edit.type = "button"
   edit.className = "bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
   edit.innerHTML = "수정"
+  edit.addEventListener("click", () => {
+    updateMenu(span)
+  })
 
   const remove = document.createElement("button")
   remove.type = "button"
@@ -47,9 +50,13 @@ function addMenu() {
 }
 
 // TODO 2. 메뉴 수정
-// - [ ] 메뉴의 수정 버튼 클릭 이벤트가 발생하면, 브라우저 prompt 인터페이스가 뜬다.
-// - [ ] 메뉴 수정 시 prompt 인터페이스에 수정 메뉴명을 기입하고 확인 버튼을 누르면 메뉴 이름이 업데이트된다.
-function updateMenu() {}
+// - [v] 메뉴의 수정 버튼 클릭 이벤트가 발생하면, 브라우저 prompt 인터페이스가 뜬다.
+// - [v] 메뉴 수정 시 prompt 인터페이스에 수정 메뉴명을 기입하고 확인 버튼을 누르면 메뉴 이름이 업데이트된다.
+function updateMenu(span) {
+  const name = prompt("메뉴명을 수정하세요", span.innerHTML)
+  if (name === null) return
+  span.innerHTML = name
+}
 
 function App() {
   form.addEventListener("submit", (e) => {
