@@ -1,13 +1,15 @@
 // Step1: 돔 조작과 이벤트 핸들링으로 메뉴 관리하기
 
-const form = document.querySelector("#espresso-menu-form")
-const input = document.querySelector("#espresso-menu-name")
-const button = document.querySelector("#espresso-menu-submit-button")
-const list = document.querySelector("#espresso-menu-list")
-const cnt = document.querySelector(".menu-count")
+const $ = (selector) => document.querySelector(selector)
+const form = $("#espresso-menu-form")
+const input = $("#espresso-menu-name")
+const list = $("#espresso-menu-list")
+const cnt = $(".menu-count")
 
-// TODO 1. 메뉴 추가
-// - [v] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
+function updateTotal() {
+  const num = list.querySelectorAll("li").length
+  cnt.innerText = `총 ${num}개`
+}
 
 const createHTML = (name) => `
 				<span class="w-100 pl-2 menu-name">${name}</span>
@@ -40,14 +42,6 @@ function addMenu() {
   input.value = ""
 }
 
-function updateTotal() {
-  const num = list.querySelectorAll("li").length
-  cnt.innerText = `총 ${num}개`
-}
-
-// TODO 2. 메뉴 수정/삭제
-// - [v] createElem 함수를 data-* 속성을 적용한 html 템플릿으로 대체.
-// - [v] 메뉴 수정과 삭제 이벤트 처리를 <ul> 요소에 위임.
 function updateMenu(e) {
   const span = e.target.closest("li").querySelector("span")
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML)
@@ -64,11 +58,13 @@ function removeMenu(e) {
 }
 
 function App() {
+  //  form 요소의 상위 submit 이벤트로 하위 요소의 click, keyup 이벤트 처리
   form.addEventListener("submit", (e) => {
     e.preventDefault()
     addMenu()
   })
 
+  // ul 요소에 수정/삭제 button 이벤트 위임
   list.addEventListener("click", (e) => {
     if (e.target.classList.contains("data-edit")) {
       updateMenu(e)
