@@ -57,22 +57,25 @@ let tab = ESPRESSO
 function updateState(action, payload) {
   switch (action) {
     case ACTIONS.ADD_MENU:
+      const newItem = payload
       state = {
         ...state,
-        [tab]: [...state[tab], payload],
+        [tab]: [...state[tab], newItem],
       }
       console.log(state)
       break
     case ACTIONS.UPDATE_MENU:
+      const { prevName, newName } = payload
       state = {
         ...state,
         [tab]: state[tab].map((item) => {
-          if (item.name === payload) {
-            return { item, name: payload }
+          if (item.name == prevName) {
+            return { ...item, name: newName }
           }
           return item
         }),
       }
+      console.log(state)
       break
     case ACTIONS.TOGGLE_SOLDOUT:
       state = {
@@ -96,7 +99,7 @@ function updateState(action, payload) {
     default:
       break
   }
-  localStorage.setItem(MENU, JSON.stringify(state))
+  setState(state)
 }
 
 function changeTab(e) {
@@ -162,8 +165,12 @@ function addMenu() {
 
 function updateMenu(e) {
   const span = e.target.closest("li").querySelector("span")
+
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML)
+
   if (ret === null) return
+
+  updateState(ACTIONS.UPDATE_MENU, { prevName: span.innerHTML, newName: ret })
   span.innerHTML = ret
 }
 
