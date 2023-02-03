@@ -6,16 +6,25 @@
 // [v] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
 // [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
 
+const $ = (selector) => document.querySelector(selector)
+
+const MENU = "menu"
+
 const ESPRESSO = "espresso"
 const FRAPPUCINO = "frappuccino"
 const BLENDED = "blended"
 const TEAVANA = "teavana"
 const DESSERT = "dessert"
 
-const MENU = "menu"
+const MENUINFOS = {
+  [ESPRESSO]: [ESPRESSO, "에스프레소", "☕"],
+  [FRAPPUCINO]: [FRAPPUCINO, "프라푸치노", "🥤"],
+  [BLENDED]: [BLENDED, "블렌디드", "🍹"],
+  [TEAVANA]: [TEAVANA, "티바나", "🫖 "],
+  [DESSERT]: [DESSERT, "디저트", "🍰"],
+}
 
 const ACTIONS = {
-  // CHANGE_TAB: "change-tab",
   ADD_MENU: "add-menu",
   UPDATE_MENU: "update-menu",
   TOGGLE_SOLDOUT: "toggle-soldOut",
@@ -38,22 +47,20 @@ function setState(state) {
   localStorage.setItem(MENU, JSON.stringify(state))
 }
 
-const hasSaved = localStorage.getItem(MENU)
+// 초기 상태값 가져오기
+const hasSaved = getState()
 if (!hasSaved) {
   setState(initialState)
 }
-
 let state = getState()
 
-const $ = (selector) => document.querySelector(selector)
-
+// 전역으로 관리하는 변수들
 let tab = ESPRESSO
 const nav = $("nav")
 
+// dispatch로 동작
 function updateState(action, payload) {
   switch (action) {
-    // case ACTIONS.CHANGE_TAB:
-    // 	break
     case ACTIONS.ADD_MENU:
       const newItem = payload
       state = {
@@ -147,6 +154,45 @@ const createHTML = (name) => `
 				</button>
 			`
 
+// TODO 커링으로 구현하고싶은데...
+const mapInfo = (tab) => MENUINFOS[tab]
+
+const mainWrapperTemplate = (category) => {
+  const [tab, tabName, emoji] = mapInfo(category)
+  return `
+    <div class="wrapper bg-white p-10">
+      <div class="heading d-flex justify-between">
+        <h2 class="mt-1">${emoji} ${tabName} 메뉴 관리</h2>
+        <span class="mr-2 mt-4 menu-count">총 0개</span>
+      </div>
+      <form id="${tab}-menu-form">
+        <div class="d-flex w-100">
+          <label for="${tab}-menu-name" class="input-label" hidden>
+            ${tabName} 메뉴 이름
+          </label>
+          <input
+            type="text"
+            id="${tab}-menu-name"
+            name="${tab}MenuName"
+            class="input-field"
+            placeholder="${tabName} 메뉴 이름"
+            autocomplete="off"
+          />
+          <button
+            type="submit"
+            name="submit"
+            id="${tab}-menu-submit-button"
+            class="input-submit bg-green-600 ml-2"
+          >
+            확인
+          </button>
+        </div>
+      </form>
+      <ul id="${tab}-menu-list" class="mt-3 pl-0"></ul>
+    </div>
+  `
+}
+
 function createItem(name, soldOut = false) {
   const item = document.createElement("li")
   item.className = "menu-list-item d-flex items-center py-2"
@@ -237,54 +283,6 @@ function render() {
 
   const menuItems = state[tab]
   menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
-}
-
-// TODO 커링으로 구현하고싶은데...
-
-const TABS = {
-  [ESPRESSO]: [ESPRESSO, "에스프레소", "☕"],
-  [FRAPPUCINO]: [FRAPPUCINO, "프라푸치노", "🥤"],
-  [BLENDED]: [BLENDED, "블렌디드", "🍹"],
-  [TEAVANA]: [TEAVANA, "티바나", "🫖 "],
-  [DESSERT]: [DESSERT, "디저트", "🍰"],
-}
-
-const mapInfo = (tab) => TABS[tab]
-
-const mainWrapperTemplate = (category) => {
-  const [tab, tabName, emoji] = mapInfo(category)
-  return `
-    <div class="wrapper bg-white p-10">
-      <div class="heading d-flex justify-between">
-        <h2 class="mt-1">${emoji} ${tabName} 메뉴 관리</h2>
-        <span class="mr-2 mt-4 menu-count">총 0개</span>
-      </div>
-      <form id="${tab}-menu-form">
-        <div class="d-flex w-100">
-          <label for="${tab}-menu-name" class="input-label" hidden>
-            ${tabName} 메뉴 이름
-          </label>
-          <input
-            type="text"
-            id="${tab}-menu-name"
-            name="${tab}MenuName"
-            class="input-field"
-            placeholder="${tabName} 메뉴 이름"
-            autocomplete="off"
-          />
-          <button
-            type="submit"
-            name="submit"
-            id="${tab}-menu-submit-button"
-            class="input-submit bg-green-600 ml-2"
-          >
-            확인
-          </button>
-        </div>
-      </form>
-      <ul id="${tab}-menu-list" class="mt-3 pl-0"></ul>
-    </div>
-  `
 }
 
 render()
