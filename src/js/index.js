@@ -8,11 +8,7 @@ const cnt = document.querySelector(".menu-count")
 let nums = 0
 
 // TODO 1. 메뉴 추가
-// - [v] 메뉴 이름을 입력받고 확인 버튼을 누르면 메뉴를 추가한다.
-// - [v] 메뉴 이름을 입력받고 엔터키 입력으로 메뉴를 추가한다.
-// - [v] 메뉴가 추가되고 나면, input은 빈 값으로 초기화한다.
-// - [v] 사용자 입력값이 빈 값이라면 추가되지 않는다.
-// - [v] 추가되는 메뉴의 아래 마크업은 <ul id ="espresso-menu-list" class="mt-3 pl-0" ></ul> 안에 삽입해야 한다.
+// - [] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
 
 function createElem(item, name) {
   const span = document.createElement("span")
@@ -40,8 +36,6 @@ function createElem(item, name) {
   item.appendChild(remove)
 }
 
-// TODO 4. 기타
-// - [v] 총 메뉴 갯수를 count하여 상단에 보여준다.
 function updateTotal() {
   cnt.innerHTML = `총 ${nums}개`
 }
@@ -63,18 +57,15 @@ function addMenu() {
   input.value = ""
 }
 
-// TODO 2. 메뉴 수정
-// - [v] 메뉴의 수정 버튼 클릭 이벤트가 발생하면, 브라우저 prompt 인터페이스가 뜬다.
-// - [v] 메뉴 수정 시 prompt 인터페이스에 수정 메뉴명을 기입하고 확인 버튼을 누르면 메뉴 이름이 업데이트된다.
+// TODO 2. 메뉴 수정/삭제
+// - [ ] createElem 함수를 data-* 속성을 적용한 html 템플릿으로 대체.
+// - [ ] 메뉴 수정과 삭제 이벤트 처리를 <ul> 요소에 위임.
 function updateMenu(span) {
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML)
   if (ret === null) return
   span.innerHTML = ret
 }
 
-// TODO 3. 메뉴 삭제
-// - [v] 메뉴의 삭제 버튼을 누르면 브라우저 confirm 인터페이스가 뜬다.
-// - [v] 메뉴 삭제 시 confirm 인터페이스에 확인 버튼을 누르면 메뉴가 삭제된다.
 function removeMenu(item) {
   const ret = confirm("정말 삭제하시겠습니까?")
   if (!ret) return
