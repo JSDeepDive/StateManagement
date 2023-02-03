@@ -47,14 +47,8 @@ let state = getState()
 
 const $ = (selector) => document.querySelector(selector)
 
-const nav = $("nav")
-
-const form = $("#espresso-menu-form")
-const input = $("#espresso-menu-name")
-const list = $("#espresso-menu-list")
-const cnt = $(".menu-count")
-
 let tab = ESPRESSO
+const nav = $("nav")
 
 function updateState(action, payload) {
   switch (action) {
@@ -109,7 +103,6 @@ function changeTab(e) {
   if (category === tab) return
 
   tab = category
-  console.log(tab)
 
   const main = $("main")
   const div = main.closest("div")
@@ -120,9 +113,14 @@ function changeTab(e) {
   newMain.innerHTML = mainWrapperTemplate(tab)
 
   div.appendChild(newMain)
+
+  render()
 }
 
 function updateTotal() {
+  const cnt = $(".menu-count")
+  const list = $(`#${tab}-menu-list`)
+
   const num = list.querySelectorAll("li").length
   cnt.innerText = `총 ${num}개`
 }
@@ -158,12 +156,15 @@ function createItem(name, soldOut = false) {
     item.querySelector("span").classList.add("sold-out")
   }
 
+  const list = $(`#${tab}-menu-list`)
   list.appendChild(item)
 
   updateTotal()
 }
 
 function addMenu() {
+  const input = $(`#${tab}-menu-name`)
+
   const name = input.value
   if (!name) return
 
@@ -208,8 +209,8 @@ function removeMenu(e) {
 }
 
 function render() {
-  const menuItems = state[tab]
-  menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
+  const form = $(`#${tab}-menu-form`)
+  const list = $(`#${tab}-menu-list`)
 
   nav.addEventListener("click", (e) => {
     changeTab(e)
@@ -233,6 +234,9 @@ function render() {
       removeMenu(e)
     }
   })
+
+  const menuItems = state[tab]
+  menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
 }
 
 // TODO 커링으로 구현하고싶은데...
@@ -282,7 +286,5 @@ const mainWrapperTemplate = (category) => {
     </div>
   `
 }
-
-function reRender() {}
 
 render()
