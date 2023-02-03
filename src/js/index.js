@@ -5,14 +5,9 @@ const input = document.querySelector("#espresso-menu-name")
 const button = document.querySelector("#espresso-menu-submit-button")
 const list = document.querySelector("#espresso-menu-list")
 const cnt = document.querySelector(".menu-count")
-let nums = 0
 
 // TODO 1. 메뉴 추가
 // - [v] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
-
-function updateTotal() {
-  cnt.innerHTML = `총 ${nums}개`
-}
 
 const createHTML = (name) => `
 				<span class="w-100 pl-2 menu-name">${name}</span>
@@ -40,26 +35,31 @@ function addMenu() {
 
   list.appendChild(item)
 
-  nums += 1
   updateTotal()
 
   input.value = ""
 }
 
+function updateTotal() {
+  const num = list.querySelectorAll("li").length
+  cnt.innerText = `총 ${num}개`
+}
+
 // TODO 2. 메뉴 수정/삭제
 // - [v] createElem 함수를 data-* 속성을 적용한 html 템플릿으로 대체.
-// - [ ] 메뉴 수정과 삭제 이벤트 처리를 <ul> 요소에 위임.
-function updateMenu(span) {
+// - [v] 메뉴 수정과 삭제 이벤트 처리를 <ul> 요소에 위임.
+function updateMenu(e) {
+  const span = e.target.closest("li").querySelector("span")
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML)
   if (ret === null) return
   span.innerHTML = ret
 }
 
-function removeMenu(item) {
+function removeMenu(e) {
+  const li = e.target.closest("li")
   const ret = confirm("정말 삭제하시겠습니까?")
   if (!ret) return
-  list.removeChild(item)
-  nums -= 1
+  li.remove()
   updateTotal()
 }
 
@@ -68,14 +68,15 @@ function App() {
     e.preventDefault()
     addMenu()
   })
-  // button.addEventListener("click", () => {
-  //   addMenu()
-  // })
-  // input.addEventListener("keyup", (e) => {
-  //   if (e.key === "Enter") {
-  //     addMenu()
-  //   }
-  // })
+
+  list.addEventListener("click", (e) => {
+    if (e.target.classList.contains("data-edit")) {
+      updateMenu(e)
+    }
+    if (e.target.classList.contains("data-remove")) {
+      removeMenu(e)
+    }
+  })
 }
 
 App()
