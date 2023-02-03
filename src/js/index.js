@@ -1,10 +1,10 @@
 // Step1: 돔 조작과 이벤트 핸들링으로 메뉴 관리하기
 
-const $ = (selector) => document.querySelector(selector)
-const form = $("#espresso-menu-form")
-const input = $("#espresso-menu-name")
-const list = $("#espresso-menu-list")
-const cnt = $(".menu-count")
+const $ = (id) => document.getElementById(id)
+const form = $("espresso-menu-form")
+const input = $("espresso-menu-name")
+const list = $("espresso-menu-list")
+const cnt = $("menu-count")
 
 function updateTotal() {
   const num = list.querySelectorAll("li").length
