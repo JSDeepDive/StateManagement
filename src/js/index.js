@@ -62,7 +62,6 @@ function updateState(action, payload) {
         ...state,
         [tab]: [...state[tab], newItem],
       }
-      console.log(state)
       break
     case ACTIONS.UPDATE_MENU:
       const { prevName, newName } = payload
@@ -75,13 +74,13 @@ function updateState(action, payload) {
           return item
         }),
       }
-      console.log(state)
       break
     case ACTIONS.TOGGLE_SOLDOUT:
+      const toggleName = payload
       state = {
         ...state,
         [tab]: state[tab].map((item) => {
-          if (item.name === payload) {
+          if (item.name === toggleName) {
             return { ...item, soldOut: !item.soldOut }
           }
           return item
@@ -89,11 +88,10 @@ function updateState(action, payload) {
       }
       break
     case ACTIONS.REMOVE_MENU:
+      const removeName = payload
       state = {
         ...state,
-        [tab]: state[tab].filter((item) => {
-          item.name !== payload
-        }),
+        [tab]: state[tab].filter((item) => item.name !== removeName),
       }
       break
     default:
@@ -183,9 +181,17 @@ function toggleSoldOut(e) {
 
 function removeMenu(e) {
   const li = e.target.closest("li")
+
   const ret = confirm("정말 삭제하시겠습니까?")
+
   if (!ret) return
+
   li.remove()
+
+  const span = li.querySelector("span")
+
+  updateState(ACTIONS.REMOVE_MENU, span.innerText)
+
   updateTotal()
 }
 
