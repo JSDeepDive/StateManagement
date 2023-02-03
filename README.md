@@ -147,11 +147,11 @@
 {
   response: [
     {
-      id: "string",
-      name: "string",
+      id: 'string',
+      name: 'string',
       isSoldOut: Boolean,
     },
-  ];
+  ]
 }
 ```
 
