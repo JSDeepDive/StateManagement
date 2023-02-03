@@ -10,11 +10,12 @@ const ESPRESSO = "espresso"
 const FRAPPUCINO = "frappuccino"
 const BLENDED = "blended"
 const TEAVANA = "teavana"
-const DESERT = "desert"
+const DESSERT = "dessert"
 
 const MENU = "menu"
 
 const ACTIONS = {
+  // CHANGE_TAB: "change-tab",
   ADD_MENU: "add-menu",
   UPDATE_MENU: "update-menu",
   TOGGLE_SOLDOUT: "toggle-soldOut",
@@ -26,7 +27,7 @@ const initialState = {
   [FRAPPUCINO]: [],
   [BLENDED]: [],
   [TEAVANA]: [],
-  [DESERT]: [],
+  [DESSERT]: [],
 }
 
 function getState() {
@@ -47,6 +48,7 @@ let state = getState()
 const $ = (selector) => document.querySelector(selector)
 
 const nav = $("nav")
+
 const form = $("#espresso-menu-form")
 const input = $("#espresso-menu-name")
 const list = $("#espresso-menu-list")
@@ -56,6 +58,8 @@ let tab = ESPRESSO
 
 function updateState(action, payload) {
   switch (action) {
+    // case ACTIONS.CHANGE_TAB:
+    // 	break
     case ACTIONS.ADD_MENU:
       const newItem = payload
       state = {
@@ -105,9 +109,17 @@ function changeTab(e) {
   if (category === tab) return
 
   tab = category
-  let menuItems = JSON.parse(localStorage.getItem(MENU))[tab]
+  console.log(tab)
 
-  menuItems.map(({ name, soldOut }) => createItem(name))
+  const main = $("main")
+  const div = main.closest("div")
+
+  main.remove()
+  const newMain = document.createElement("main")
+  newMain.className = "mt-10 d-flex justify-center"
+  newMain.innerHTML = mainWrapperTemplate(tab)
+
+  div.appendChild(newMain)
 }
 
 function updateTotal() {
@@ -195,7 +207,10 @@ function removeMenu(e) {
   updateTotal()
 }
 
-function App() {
+function render() {
+  const menuItems = state[tab]
+  menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
+
   nav.addEventListener("click", (e) => {
     changeTab(e)
   })
@@ -220,10 +235,52 @@ function App() {
   })
 }
 
-function render() {
-  App()
-  const menuItems = state[tab]
-  menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
+// TODO 커링으로 구현하고싶은데...
+
+const TABS = {
+  [ESPRESSO]: [ESPRESSO, "에스프레소", "☕"],
+  [FRAPPUCINO]: [FRAPPUCINO, "프라푸치노", "🥤"],
+  [BLENDED]: [BLENDED, "블렌디드", "🍹"],
+  [TEAVANA]: [TEAVANA, "티바나", "🫖 "],
+  [DESSERT]: [DESSERT, "디저트", "🍰"],
+}
+
+const mapInfo = (tab) => TABS[tab]
+
+const mainWrapperTemplate = (category) => {
+  const [tab, tabName, emoji] = mapInfo(category)
+  return `
+    <div class="wrapper bg-white p-10">
+      <div class="heading d-flex justify-between">
+        <h2 class="mt-1">${emoji} ${tabName} 메뉴 관리</h2>
+        <span class="mr-2 mt-4 menu-count">총 0개</span>
+      </div>
+      <form id="${tab}-menu-form">
+        <div class="d-flex w-100">
+          <label for="${tab}-menu-name" class="input-label" hidden>
+            ${tabName} 메뉴 이름
+          </label>
+          <input
+            type="text"
+            id="${tab}-menu-name"
+            name="${tab}MenuName"
+            class="input-field"
+            placeholder="${tabName} 메뉴 이름"
+            autocomplete="off"
+          />
+          <button
+            type="submit"
+            name="submit"
+            id="${tab}-menu-submit-button"
+            class="input-submit bg-green-600 ml-2"
+          >
+            확인
+          </button>
+        </div>
+      </form>
+      <ul id="${tab}-menu-list" class="mt-3 pl-0"></ul>
+    </div>
+  `
 }
 
 function reRender() {}
