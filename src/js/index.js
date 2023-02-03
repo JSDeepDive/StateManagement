@@ -8,7 +8,7 @@ const cnt = document.querySelector(".menu-count")
 let nums = 0
 
 // TODO 1. 메뉴 추가
-// - [] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
+// - [v] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
 
 function createElem(item, name) {
   const span = document.createElement("span")
@@ -77,15 +77,16 @@ function removeMenu(item) {
 function App() {
   form.addEventListener("submit", (e) => {
     e.preventDefault()
-  })
-  button.addEventListener("click", () => {
     addMenu()
   })
-  input.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") {
-      addMenu()
-    }
-  })
+  // button.addEventListener("click", () => {
+  //   addMenu()
+  // })
+  // input.addEventListener("keyup", (e) => {
+  //   if (e.key === "Enter") {
+  //     addMenu()
+  //   }
+  // })
 }
 
 App()
