@@ -39,6 +39,7 @@ const render = () => {
 			${menu.map((name) => createItem(name)).join("")}
 		</ul>
 	`
+  // 메뉴 추가
   $("form").addEventListener("submit", (e) => {
     e.preventDefault()
     const name = $("input").value
@@ -67,21 +68,6 @@ render()
 // function updateTotal() {
 //   const num = list.querySelectorAll("li").length
 //   cnt.innerText = `총 ${num}개`
-// }
-
-// function addMenu() {
-//   const name = input.value
-//   if (!name) return
-
-//   const item = document.createElement("li")
-//   item.className = "menu-list-item d-flex items-center py-2"
-//   item.innerHTML = createHTML(name)
-
-//   list.appendChild(item)
-
-//   updateTotal()
-
-//   input.value = ""
 // }
 
 // function updateMenu(e) {
