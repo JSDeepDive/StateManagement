@@ -103,7 +103,7 @@ const render = () => {
 		</ul>
 	`
 
-  // TODO: [Issue: 메뉴 추가/ 수정/ 삭제시마다 동일한 이벤트 핸들러가 추가됨]
+  // TODO: [Issue: 메뉴 추가/ 수정/ 삭제시마다 동일한 이벤트 핸들러가 추가됨]!!
   console.log(`[Issue] Same Event Handler Enrolled ${renderTimes} times`)
 
   // 메뉴 추가
