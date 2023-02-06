@@ -32,6 +32,19 @@ let state = {
   ],
 }
 
+const addMenu = () => {
+  const { menu } = state
+  const input = $("input")
+
+  const name = input.value
+
+  if (!name) return
+
+  setState({ menu: [...menu, name] })
+
+  input.value = ""
+}
+
 const render = () => {
   const { menu } = state
   list.innerHTML = `
@@ -42,9 +55,7 @@ const render = () => {
   // 메뉴 추가
   $("form").addEventListener("submit", (e) => {
     e.preventDefault()
-    const name = $("input").value
-    if (!name) return
-    setState({ menu: [...menu, name] })
+    addMenu()
   })
 }
 
