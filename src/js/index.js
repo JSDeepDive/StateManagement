@@ -36,7 +36,6 @@ let state = {
 
 let renderTimes = 0
 
-// render 내에서 동작하는 addMenu 이벤트
 const addMenu = () => {
   const { menu } = state
   const input = $("input")
@@ -60,6 +59,7 @@ function updateMenu(e) {
 
   if (newName === null) return
 
+  // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
   setState({
     menu: menu.map((name, idx) => {
       if (index === idx) return newName
@@ -76,12 +76,20 @@ function removeMenu(e) {
 
   const index = Number(e.target.dataset.index)
 
+  // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
   setState({
     menu: menu.filter((_, idx) => index !== idx),
   })
 }
 
+function updateTotal() {
+  const { menu } = state
+  const cnt = $(".menu-count")
+  cnt.innerText = `총 ${menu.length}개`
+}
+
 const render = () => {
+  console.log("[Render] Called!")
   renderTimes += 1
 
   const { menu } = state
@@ -94,6 +102,10 @@ const render = () => {
 			${menu.map((name, idx) => createItem(name, idx)).join("")}
 		</ul>
 	`
+
+  // TODO: [Issue: 메뉴 추가/ 수정/ 삭제시마다 동일한 이벤트 핸들러가 추가됨]
+  console.log(`[Issue] Same Event Handler Enrolled ${renderTimes} times`)
+
   // 메뉴 추가
   form.addEventListener("submit", (e) => {
     e.preventDefault()
@@ -109,6 +121,8 @@ const render = () => {
       removeMenu(e)
     }
   })
+
+  updateTotal()
 }
 
 const setState = (newState) => {
@@ -123,30 +137,3 @@ const setState = (newState) => {
 }
 
 render()
-
-// const cnt = $(".menu-count")
-
-// function updateTotal() {
-//   const num = list.querySelectorAll("li").length
-//   cnt.innerText = `총 ${num}개`
-// }
-
-// function App() {
-//   //  form 요소의 상위 submit 이벤트로 하위 요소의 click, keyup 이벤트 처리
-//   form.addEventListener("submit", (e) => {
-//     e.preventDefault()
-//     addMenu()
-//   })
-
-//   // ul 요소에 수정/삭제 button 이벤트 위임
-//   list.addEventListener("click", (e) => {
-//     if (e.target.classList.contains("data-edit")) {
-//       updateMenu(e)
-//     }
-//     if (e.target.classList.contains("data-remove")) {
-//       removeMenu(e)
-//     }
-//   })
-// }
-
-// App()
