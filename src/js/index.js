@@ -88,6 +88,20 @@ function updateTotal() {
   cnt.innerText = `총 ${menu.length}개`
 }
 
+function addEventHandler(e) {
+  e.preventDefault()
+  addMenu()
+}
+
+function updateRemoveEventHandler(e) {
+  if (e.target.classList.contains("data-edit")) {
+    updateMenu(e)
+  }
+  if (e.target.classList.contains("data-remove")) {
+    removeMenu(e)
+  }
+}
+
 const render = () => {
   console.log("[Render] Called!")
   renderTimes += 1
@@ -102,25 +116,11 @@ const render = () => {
 			${menu.map((name, idx) => createItem(name, idx)).join("")}
 		</ul>
 	`
-
-  // TODO: [Issue: 메뉴 추가/ 수정/ 삭제시마다 동일한 이벤트 핸들러가 추가됨]!!
-  console.log(`[Issue] Same Event Handler Enrolled ${renderTimes} times`)
-
   // 메뉴 추가
-  form.addEventListener("submit", (e) => {
-    e.preventDefault()
-    addMenu()
-  })
+  form.addEventListener("submit", addEventHandler)
 
   // 메뉴 수정/삭제
-  list.addEventListener("click", (e) => {
-    if (e.target.classList.contains("data-edit")) {
-      updateMenu(e)
-    }
-    if (e.target.classList.contains("data-remove")) {
-      removeMenu(e)
-    }
-  })
+  list.addEventListener("click", updateRemoveEventHandler)
 
   updateTotal()
 }
