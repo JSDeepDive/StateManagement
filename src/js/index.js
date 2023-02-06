@@ -36,6 +36,7 @@ let state = {
 
 let renderTimes = 0
 
+// render 내에서 동작하는 addMenu 이벤트
 const addMenu = () => {
   const { menu } = state
   const input = $("input")
@@ -68,11 +69,16 @@ function updateMenu(e) {
 }
 
 function removeMenu(e) {
-  const li = e.target.closest("li")
+  const { menu } = state
+
   const ret = confirm("정말 삭제하시겠습니까?")
   if (!ret) return
-  li.remove()
-  updateTotal()
+
+  const index = Number(e.target.dataset.index)
+
+  setState({
+    menu: menu.filter((_, idx) => index !== idx),
+  })
 }
 
 const render = () => {
