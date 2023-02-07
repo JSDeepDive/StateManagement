@@ -23,8 +23,50 @@ const createItem = (name, key) => `
 const $ = (selector) => document.querySelector(selector)
 
 /*
- * state: 컴포넌트 내부에서 관리할 상태값
+ * Component: state, setState, render 및 기타 메서드로 구성된 웹 컴포넌트
  **/
+class Component {
+  $target
+  $state
+
+  constructor($target, $state) {
+    this.$target = $target
+    this.setup()
+    this.render()
+  }
+
+  // setup: 초기 state 설정하는 함수
+  setup() {}
+
+  // template: target DOM 요소 내부의 자식 요소들을 문자열 형태로 반환하는 함수
+  template() {
+    return ""
+  }
+
+  // setEvent: target DOM 요소에 이벤트 핸들러를 등록하는 함수
+  setEvent() {}
+
+  // render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
+  render() {
+    this.$target.innerHTML = this.template()
+    this.setEvent()
+  }
+
+  // setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
+  setState(newState) {
+    this.$state = { ...this.$state, ...newState }
+    console.log(
+      `[setState]: \n(prevState) ${JSON.stringify(
+        prevState
+      )} \n(currState) ${JSON.stringify(state)}`
+    )
+    this.render()
+  }
+}
+
+/*
+ * state: 상태
+ */
 let state = {
   menu: [
     "long black",
@@ -37,12 +79,43 @@ let state = {
 }
 
 /*
+ * setEventHandler: DOM 요소에 이벤트 핸들러 등록
+ **/
+const setEventHandler = () => {
+  const form = $("form")
+  const list = $("ul")
+
+  // 메뉴 추가
+  form.addEventListener("submit", (e) => {
+    e.preventDefault()
+    addMenu()
+  })
+
+  // 메뉴 수정/삭제
+  list.addEventListener("click", (e) => {
+    if (e.target.classList.contains("data-edit")) {
+      updateMenu(e)
+    }
+    if (e.target.classList.contains("data-remove")) {
+      removeMenu(e)
+    }
+  })
+}
+
+/*
+ * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
+ **/
+const initialRender = () => {
+  setEventHandler()
+  render()
+}
+
+/*
  * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
  **/
 const render = () => {
   const { menu } = state
 
-  const form = $("form")
   const list = $("ul")
 
   list.innerHTML = `
@@ -50,11 +123,6 @@ const render = () => {
 			${menu.map((name, idx) => createItem(name, idx)).join("")}
 		</ul>
 	`
-  // 메뉴 추가
-  form.addEventListener("submit", addEventHandler)
-
-  // 메뉴 수정/삭제
-  list.addEventListener("click", updateRemoveEventHandler)
 
   updateTotal()
 }
@@ -73,7 +141,7 @@ const setState = (newState) => {
   render()
 }
 
-render()
+initialRender()
 
 /*
  * 하단의 addMenu, updateMenu, removeMenu, updateTotal은 render 함수 내부에서 호출하는 함수
@@ -129,23 +197,4 @@ function updateTotal() {
   const { menu } = state
   const cnt = $(".menu-count")
   cnt.innerText = `총 ${menu.length}개`
-}
-
-/*
- * 동일 이벤트에 대해 동일한 이벤트를 여러 번 등록하지 않도록 하기 위해, 별도의 함수로 분리.
- * addEventListener는 이벤트 핸들러를 큐에 넣기 전, 참조 메모리 주소에 의해 동일성 여부 검사함.
- **/
-
-function addEventHandler(e) {
-  e.preventDefault()
-  addMenu()
-}
-
-function updateRemoveEventHandler(e) {
-  if (e.target.classList.contains("data-edit")) {
-    updateMenu(e)
-  }
-  if (e.target.classList.contains("data-remove")) {
-    removeMenu(e)
-  }
 }
