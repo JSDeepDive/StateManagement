@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <br/>
 <p align="middle">
   <img width="200px;" src="./src/images/moonbucks.png"/>
@@ -244,3 +245,6 @@ live-server 폴더명
 ## 📝 License
 
 This project is [MIT](https://github.com/blackcoffee-study/moonbucks-menu/blob/main/LICENSE) licensed.
+=======
+# StateManagement
+>>>>>>> Initial commit
