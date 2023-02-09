@@ -13,7 +13,48 @@
  * **********************************************************************
  **/
 
+/*
+ * **********************************************************************
+ * Step2
+ * [ ] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
+ * [ ] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
+ * [ ] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
+ * [ ] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+ * (v1) 상태 관리로 메뉴 관리하기
+ *
+ * **********************************************************************
+ **/
+
 const $ = (selector) => document.querySelector(selector)
+
+function createStore(reducer) {
+  let state
+  let callbacks = []
+
+  function dispatch(action) {
+    // state 불변성 유지. state는 오직 store 내에서만 변경 가능.
+    state = reducer(state, action)
+    // state 변경 시마다 등록된 콜백함수들 동기적으로 호출
+    callbacks.forEach((callback) => callback())
+  }
+
+  function subscribe(callback) {
+    callbacks.push(callback)
+  }
+
+  function getState() {
+    return state
+  }
+
+  // 클로저로 private state, private callbacks 구현해 정보 은닉
+  return {
+    dispatch,
+    subscribe,
+    getState,
+  }
+}
+
+const initialState = {}
 
 /*
  * state: 전역 상태
@@ -28,6 +69,23 @@ let state = {
     "cappucino",
   ],
 }
+
+// reducer는 디폴트값으로 initialState 받음
+function reducer(state = initialState, action) {
+  switch (action.type) {
+    case ACTIONTYPE1:
+      // 기존 state값을 복사한 신규 객체를 만들고, 변경 사항을 반영하여 반환함.
+      return { ...state }
+    default:
+      return { ...state }
+  }
+}
+
+const store = createStore(reducer)
+
+store.subscribe(function () {
+  console.log(store.getState())
+})
 
 /*
  * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
