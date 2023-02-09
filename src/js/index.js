@@ -31,6 +31,8 @@ function createStore(reducer) {
   let state
   let callbacks = []
 
+  dispatch(actionCreator(INIT_MENU, {}))
+
   function dispatch(action) {
     // state 불변성 유지. state는 오직 store 내에서만 변경 가능.
     state = reducer(state, action)
@@ -54,38 +56,98 @@ function createStore(reducer) {
   }
 }
 
-const initialState = {}
+const ESPRESSO = "espresso"
+const FRAPPUCINO = "frappuccino"
+const BLENDED = "blended"
+const TEAVANA = "teavana"
+const DESSERT = "dessert"
+
+const INIT_MENU = "init-menu"
+const ADD_MENU = "add-menu"
+const UPDATE_MENU = "update-menu"
+const REMOVE_MENU = "remove-menu"
+const TOGGLE_MENU = "toggle-menu"
 
 /*
- * state: 전역 상태
+ * initialState: 초기 상태
  */
-let state = {
-  menu: [
-    "long black",
-    "americano",
-    "espresso con panna",
-    "lattte",
-    "cafe mocha",
-    "cappucino",
-  ],
+const initialState = {
+  menuList: {
+    [ESPRESSO]: [
+      { name: "long black", soldOut: false },
+      { name: "americano", soldOut: false },
+      { name: "espresso con panna", soldOut: false },
+      { name: "lattte", soldOut: false },
+      { name: "cafe mocha", soldOut: false },
+    ],
+    [FRAPPUCINO]: [],
+    [BLENDED]: [],
+    [TEAVANA]: [],
+    [DESSERT]: [],
+  },
 }
 
+let componentState = {
+  tab: ESPRESSO,
+}
+
+// TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
 // reducer는 디폴트값으로 initialState 받음
 function reducer(state = initialState, action) {
-  switch (action.type) {
-    case ACTIONTYPE1:
-      // 기존 state값을 복사한 신규 객체를 만들고, 변경 사항을 반영하여 반환함.
+  // 기존 state값을 복사한 신규 객체를 만들고, 변경 사항을 반영하여 반환함.
+  const { type, payload } = action
+  const { tab } = componentState
+  switch (type) {
+    case INIT_MENU:
       return { ...state }
+    case ADD_MENU:
+      const { name } = payload
+      const newItem = { name, soldOut: false }
+      console.log(state)
+      console.log(...state)
+      return { ...state, [tab]: [...state.menuList[tab], newItem] }
+    case UPDATE_MENU:
+      const { updateIdx, newName } = payload
+      const updatedMenu = state[tab].map((item, idx) => {
+        if (idx === updateIdx) {
+          const updatedItem = { ...item, name: newName }
+          return updatedItem
+        }
+        return item
+      })
+      return { ...state, [tab]: updatedMenu }
+    case REMOVE_MENU:
+      const { removeIdx } = payload
+      const removedMenu = state[tab].filter((item) => item.idx !== removeIdx)
+      return { ...state, [tab]: removedMenu }
+    case TOGGLE_MENU:
+      const { toggleIdx } = payload
+      const toggledMenu = state[tab].map((item, idx) => {
+        if (idx === toggleIdx) {
+          const toggledItem = { ...item, soldOut: !item.soldOut }
+          return toggledItem
+        }
+        return item
+      })
+      return { ...state, [tab]: toggledMenu }
     default:
       return { ...state }
   }
 }
 
+// TODO 커링 함수로 변경
+const actionCreator = (type, payload) => {
+  return { type, payload }
+}
+
 const store = createStore(reducer)
 
+// state 상태 변화할 때마다 로그 찍는 함수 등록
 store.subscribe(function () {
   console.log(store.getState())
 })
+
+store.subscribe(render)
 
 /*
  * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
@@ -98,12 +160,14 @@ const initialRender = () => {
 /*
  * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
  **/
-const render = () => {
-  const { menu } = state
+function render() {
+  const { menuList } = store.getState()
+  const { tab } = componentState
+  const currTabMenu = menuList[tab]
 
   const list = $("ul")
 
-  list.innerHTML = template(menu)
+  list.innerHTML = template(currTabMenu)
 
   updateTotal()
 }
@@ -112,12 +176,13 @@ const render = () => {
  * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
  **/
 const setState = (newState) => {
-  const prevState = state
-  state = { ...state, ...newState }
+  console.log("setState")
+  const prevState = componentState
+  componentState = { ...componentState, ...newState }
   console.log(
     `[setState]: \n(prevState) ${JSON.stringify(
       prevState
-    )} \n(currState) ${JSON.stringify(state)}`
+    )} \n(currState) ${JSON.stringify(componentState)}`
   )
   render()
 }
@@ -154,7 +219,7 @@ function setEventHandler() {
 function template(menu) {
   return menu
     .map(
-      (name, idx) =>
+      ({ name }, idx) =>
         `
 			<li class="menu-list-item d-flex items-center py-2">
 				<span class="w-100 pl-2 menu-name">${name}</span>
@@ -183,53 +248,53 @@ function template(menu) {
  * DOM 요소에는 값을 가져올 때만 접근하고, 값이 변경될 때 DOM 요소를 직접 접근하지 않고 setState로 처리함
  **/
 function addMenu() {
-  const { menu } = state
   const input = $("input")
 
   const name = input.value
 
   if (!name) return
 
-  setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
+  store.dispatch(actionCreator(ADD_MENU, { name }))
+  // setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
 
   input.value = ""
 }
 
 function updateMenu(e) {
-  const { menu } = state
-
   const prevName = e.target.closest("li").querySelector("span").innerText
-  const index = Number(e.target.dataset.index)
+  const updateIdx = Number(e.target.dataset.index)
 
   const newName = prompt("메뉴명을 수정하세요", prevName)
 
   if (newName === null) return
 
+  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }))
   // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
-  setState({
-    menu: menu.map((name, idx) => {
-      if (index === idx) return newName
-      return name
-    }),
-  })
+  // setState({
+  //   menu: menu.map((name, idx) => {
+  //     if (index === idx) return newName
+  //     return name
+  //   }),
+  // })
 }
 
 function removeMenu(e) {
-  const { menu } = state
-
   const ret = confirm("정말 삭제하시겠습니까?")
   if (!ret) return
 
-  const index = Number(e.target.dataset.index)
+  const removeIdx = Number(e.target.dataset.index)
 
+  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }))
   // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
-  setState({
-    menu: menu.filter((_, idx) => index !== idx),
-  })
+  // setState({
+  //   menu: menu.filter((_, idx) => index !== idx),
+  // })
 }
 
 function updateTotal() {
-  const { menu } = state
+  const { menuList } = store.getState()
+  const { tab } = componentState
+  const menu = menuList[tab]
   const cnt = $(".menu-count")
   cnt.innerText = `총 ${menu.length}개`
 }
