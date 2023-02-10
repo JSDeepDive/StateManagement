@@ -16,17 +16,51 @@
 /*
  * **********************************************************************
  * Step2
- * [ ] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
+ * [v] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
  * [v] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
- * [ ] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
+ * [v] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
  * [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
  * (v1) 상태 관리로 메뉴 관리하기
- *
+ * - createStore 메서드 통해 전역 상태 관리에 사용할 dispatch, subscribe, getState 메서드를 가진 객체 store 반환
+ * - 메뉴 추가/업데이트/삭제/메뉴 품절 여부 표시 이벤트 핸들러의 setState를 store.dispatch(actionCreator(type, payload)) 형태로 수정
+ * - 즉, 메뉴 관련 이벤트가 발생하면, actionCreator가 action 객체를 만들어 반환하여 dispatch에 전달
+ * - store의 dispatch 메서드에서는 reducer에게 상태 변화를 위임함
+ * - reducer(state, action)는 순수함수로 구현
+ * - reducer 내부에서 상태를 직접 변경하지 않고, 기존 상태를 복제한 뒤 변경 사항을 반영하여 해당 객체를 반환하도록 해 불변성 유지함
+ * - 따라서 실제 상태 변경은 store 내부에서만 발생하도록 제약함
+ * - 상태 변경 시마다 localStorage에 신규 상태가 반영되고, 리렌더링이 일어날 수 있도록 해당 메서드들을 store.subscribe(메서드)에 전달함
+ * - store의 상태에 접근해야 할 때, 항상 store.getState() 메서드를 통해 접근
  * **********************************************************************
  **/
 
+/*
+ * MENU_CATEGORIES: 카테고리 명칭 상수화(휴먼 에러 방지 - 실제 desert 사례)
+ */
+const ESPRESSO = "espresso"
+const FRAPPUCINO = "frappuccino"
+const BLENDED = "blended"
+const TEAVANA = "teavana"
+const DESSERT = "dessert"
+
+/*
+ * ACTION_TYPES: 액션 타입 명칭 상수화(휴먼 에러 방지)
+ */
+const INIT_MENU = "init-menu"
+const ADD_MENU = "add-menu"
+const UPDATE_MENU = "update-menu"
+const REMOVE_MENU = "remove-menu"
+const TOGGLE_MENU = "toggle-menu"
+
 const $ = (selector) => document.querySelector(selector)
 
+/*
+ * createStore(reducer): 전역 상태관리를 수행하는 store 객체를 반환하는 함수
+ * store 객체에 dispatch, subscribe, getState 메서드만 반환하여, state 정보 은닉(클로저).
+ * reducer: store에서 상태 변경을 위임하는 함수
+ * (1) dispatch(action): 특정 action이 발생했음을 알려, store에서 상태를 변경하도록 함.
+ * (2) subscribe(callback): store에서 상태 변경이 수행된 후, 호출할 함수들을 전달함.
+ * (3) getState(): store의 현재 상태를 반환함.
+ */
 function createStore(reducer) {
   let state
   let callbacks = []
@@ -46,6 +80,7 @@ function createStore(reducer) {
 
   function getState() {
     return state
+    return { ...state } // TODO 차이?
   }
 
   // 클로저로 private state, private callbacks 구현해 정보 은닉
@@ -56,19 +91,6 @@ function createStore(reducer) {
   }
 }
 
-// TODO 상수로 빼는 이유: 휴먼 에러 방지(실제 desert 사례)
-const ESPRESSO = "espresso"
-const FRAPPUCINO = "frappuccino"
-const BLENDED = "blended"
-const TEAVANA = "teavana"
-const DESSERT = "dessert"
-
-const INIT_MENU = "init-menu"
-const ADD_MENU = "add-menu"
-const UPDATE_MENU = "update-menu"
-const REMOVE_MENU = "remove-menu"
-const TOGGLE_MENU = "toggle-menu"
-
 /*
  * saveState: localStorage에 접근해 store의 state를 저장하는 함수
  */
@@ -77,6 +99,9 @@ function saveState() {
   localStorage.setItem("state", JSON.stringify(state))
 }
 
+/*
+ * getInitState: localStorage에서 초기 상태값을 가져오는 함수
+ */
 function getInitState() {
   const savedState = JSON.parse(localStorage.getItem("state"))
 
@@ -97,14 +122,20 @@ function getInitState() {
   return stateTemplate
 }
 
+/*
+ * componentState: 컴포넌트 내부에서 관리하는 상태
+ */
 let componentState = {
   tab: ESPRESSO,
 }
 
 // TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
-// reducer는 디폴트값으로 initialState 받음
+// TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
+// TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
+/*
+ * reducer(state, action): state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
+ */
 function reducer(state = getInitState(), action) {
-  // 기존 state값을 복사한 신규 객체를 만들고, 변경 사항을 반영하여 반환함.
   const { type, payload } = action
   const { tab } = componentState
   switch (type) {
@@ -113,7 +144,6 @@ function reducer(state = getInitState(), action) {
     case ADD_MENU:
       const { name } = payload
       const newItem = { name, soldOut: false }
-      // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행
       return {
         ...state,
         menuList: {
@@ -280,9 +310,20 @@ function template(menu) {
 }
 
 /*
- * 하단의 addMenu, updateMenu, removeMenu, updateTotal은 render 함수 내부에서 호출하는 함수
- * DOM 요소에는 값을 가져올 때만 접근하고, 값이 변경될 때 DOM 요소를 직접 접근하지 않고 setState로 처리함
+ * 하단의 changeTab, addMenu, updateMenu, removeMenu, toggleMenu는 이벤트 핸들러로 등록되는 함수
+ * DOM 요소에는 사용자 입력값을 가져올 때만 접근하는 것 외에 직접 접근 하지 않음
+ * 하단 함수들은 setState나 dispatch를 통해 상태 변경 요청만 보냄
+ * 즉, 요청을 보낸 뒤, 따로 DOM 조작에 신경 쓸 필요 없음
  **/
+function changeTab(e) {
+  const { tab: currTab } = componentState
+  const newTab = e.target.dataset.categoryName
+
+  if (currTab === newTab) return
+
+  setState({ tab: newTab })
+}
+
 function addMenu() {
   const input = $("input")
 
@@ -333,6 +374,10 @@ function toggleMenu(e) {
   store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }))
 }
 
+/*
+ * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
+ **/
+// TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기
 function updateTotal() {
   const { menuList } = store.getState()
   const { tab } = componentState
@@ -351,13 +396,4 @@ function updateTitle() {
   ).innerText
 
   title.innerText = `${currCategory} 메뉴 관리`
-}
-
-function changeTab(e) {
-  const { tab: currTab } = componentState
-  const newTab = e.target.dataset.categoryName
-
-  if (currTab === newTab) return
-
-  setState({ tab: newTab })
 }
