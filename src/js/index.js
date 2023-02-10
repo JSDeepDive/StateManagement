@@ -70,22 +70,31 @@ const REMOVE_MENU = "remove-menu"
 const TOGGLE_MENU = "toggle-menu"
 
 /*
- * initialState: 초기 상태
+ * saveState: localStorage에 접근해 store의 state를 저장하는 함수
  */
-const initialState = {
-  menuList: {
-    [ESPRESSO]: [
-      { name: "long black", soldOut: false },
-      { name: "americano", soldOut: false },
-      { name: "espresso con panna", soldOut: false },
-      { name: "lattte", soldOut: false },
-      { name: "cafe mocha", soldOut: false },
-    ],
-    [FRAPPUCINO]: [],
-    [BLENDED]: [],
-    [TEAVANA]: [],
-    [DESSERT]: [],
-  },
+function saveState() {
+  const state = store.getState()
+  localStorage.setItem("state", JSON.stringify(state))
+}
+
+function getInitState() {
+  const savedState = JSON.parse(localStorage.getItem("state"))
+
+  if (savedState !== null) {
+    return savedState
+  }
+
+  const stateTemplate = {
+    menuList: {
+      [ESPRESSO]: [],
+      [FRAPPUCINO]: [],
+      [BLENDED]: [],
+      [TEAVANA]: [],
+      [DESSERT]: [],
+    },
+  }
+
+  return stateTemplate
 }
 
 let componentState = {
@@ -94,7 +103,7 @@ let componentState = {
 
 // TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
 // reducer는 디폴트값으로 initialState 받음
-function reducer(state = initialState, action) {
+function reducer(state = getInitState(), action) {
   // 기존 state값을 복사한 신규 객체를 만들고, 변경 사항을 반영하여 반환함.
   const { type, payload } = action
   const { tab } = componentState
@@ -154,13 +163,15 @@ const store = createStore(reducer)
 store.subscribe(function () {
   console.log("[Global State Changed]", store.getState())
 })
-
+store.subscribe(saveState)
 store.subscribe(render)
+
+initialRender()
 
 /*
  * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
  **/
-const initialRender = () => {
+function initialRender() {
   setEventHandler()
   render()
 }
@@ -185,7 +196,7 @@ function render() {
 /*
  * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
  **/
-const setState = (newState) => {
+function setState(newState) {
   const prevState = componentState
   componentState = { ...componentState, ...newState }
   console.log(
@@ -195,8 +206,6 @@ const setState = (newState) => {
   )
   render()
 }
-
-initialRender()
 
 /*
  * setEventHandler: DOM 요소에 이벤트 핸들러 등록
