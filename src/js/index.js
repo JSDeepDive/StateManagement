@@ -1,288 +1,177 @@
-// [V] Step1: DOM 조작과 이벤트 핸들링으로 메뉴 관리하기
-// [V] Step2: localStorage 상태 관리로 메뉴 관리하기
-
-// [v] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
-// [v] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
-// [v] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
-// [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+/*
+ * **********************************************************************
+ * Step1
+ * (v1) DOM 조작과 이벤트 핸들링으로 메뉴 CRUD
+ * (v2) 이벤트 위임 적용한 메뉴 CRUD
+ * - form 요소의 상위 submit 이벤트로 하위 요소의 click, keyup 이벤트 처리
+ * - 상위 ul 요소에 하위 수정/삭제 button 요소의 이벤트 위임
+ * - [!] 이벤트 핸들러 중복 등록 이슈 발생
+ * (v3) DOM 요소 조정 과정 추상화한 React 환경 모방
+ * - (1) 인자로 받은 값으로 기존 상태를 업데이트 시키는 코드 setStaet 함수로 추상화
+ * - (2) 상태 변화에 맞게 사용자에게 보여질 DOM 요소 조정 코드 render 함수로 추상화
+ * - 이벤트 등록 함수 render 외부로 분리해 중복 등록 이슈 해결
+ * **********************************************************************
+ **/
 
 const $ = (selector) => document.querySelector(selector)
 
-const MENU = "menu"
-
-const ESPRESSO = "espresso"
-const FRAPPUCINO = "frappuccino"
-const BLENDED = "blended"
-const TEAVANA = "teavana"
-const DESSERT = "dessert"
-
-const MENUINFOS = {
-  [ESPRESSO]: [ESPRESSO, "에스프레소", "☕"],
-  [FRAPPUCINO]: [FRAPPUCINO, "프라푸치노", "🥤"],
-  [BLENDED]: [BLENDED, "블렌디드", "🍹"],
-  [TEAVANA]: [TEAVANA, "티바나", "🫖 "],
-  [DESSERT]: [DESSERT, "디저트", "🍰"],
+/*
+ * state: 전역 상태
+ */
+let state = {
+  menu: [
+    "long black",
+    "americano",
+    "espresso con panna",
+    "lattte",
+    "cafe mocha",
+    "cappucino",
+  ],
 }
 
-const ACTIONS = {
-  ADD_MENU: "add-menu",
-  UPDATE_MENU: "update-menu",
-  TOGGLE_SOLDOUT: "toggle-soldOut",
-  REMOVE_MENU: "remove-menu",
-}
-
-const initialState = {
-  [ESPRESSO]: [],
-  [FRAPPUCINO]: [],
-  [BLENDED]: [],
-  [TEAVANA]: [],
-  [DESSERT]: [],
-}
-
-function getState() {
-  return JSON.parse(localStorage.getItem(MENU))
-}
-
-function setState(state) {
-  localStorage.setItem(MENU, JSON.stringify(state))
-}
-
-// 초기 상태값 가져오기
-const hasSaved = getState()
-if (!hasSaved) {
-  setState(initialState)
-}
-let state = getState()
-
-// 전역으로 관리하는 변수들
-let tab = ESPRESSO
-const nav = $("nav")
-
-// dispatch로 동작
-function updateState(action, payload) {
-  switch (action) {
-    case ACTIONS.ADD_MENU:
-      const newItem = payload
-      state = {
-        ...state,
-        [tab]: [...state[tab], newItem],
-      }
-      break
-    case ACTIONS.UPDATE_MENU:
-      const { prevName, newName } = payload
-      state = {
-        ...state,
-        [tab]: state[tab].map((item) => {
-          if (item.name == prevName) {
-            return { ...item, name: newName }
-          }
-          return item
-        }),
-      }
-      break
-    case ACTIONS.TOGGLE_SOLDOUT:
-      const toggleName = payload
-      state = {
-        ...state,
-        [tab]: state[tab].map((item) => {
-          if (item.name === toggleName) {
-            return { ...item, soldOut: !item.soldOut }
-          }
-          return item
-        }),
-      }
-      break
-    case ACTIONS.REMOVE_MENU:
-      const removeName = payload
-      state = {
-        ...state,
-        [tab]: state[tab].filter((item) => item.name !== removeName),
-      }
-      break
-    default:
-      break
-  }
-  setState(state)
-}
-
-function changeTab(e) {
-  const category = e.target.dataset.categoryName
-  if (category === tab) return
-
-  tab = category
-
-  const main = $("main")
-  const div = main.closest("div")
-
-  main.remove()
-  const newMain = document.createElement("main")
-  newMain.className = "mt-10 d-flex justify-center"
-  newMain.innerHTML = mainWrapperTemplate(tab)
-
-  div.appendChild(newMain)
-
+/*
+ * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
+ **/
+const initialRender = () => {
+  setEventHandler()
   render()
 }
 
-function updateTotal() {
-  const cnt = $(".menu-count")
-  const list = $(`#${tab}-menu-list`)
+/*
+ * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
+ **/
+const render = () => {
+  const { menu } = state
 
-  const num = list.querySelectorAll("li").length
-  cnt.innerText = `총 ${num}개`
+  const list = $("ul")
+
+  list.innerHTML = template(menu)
+
+  updateTotal()
 }
 
-const createHTML = (name) => `
+/*
+ * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
+ **/
+const setState = (newState) => {
+  const prevState = state
+  state = { ...state, ...newState }
+  console.log(
+    `[setState]: \n(prevState) ${JSON.stringify(
+      prevState
+    )} \n(currState) ${JSON.stringify(state)}`
+  )
+  render()
+}
+
+initialRender()
+
+/*
+ * setEventHandler: DOM 요소에 이벤트 핸들러 등록
+ **/
+function setEventHandler() {
+  const form = $("form")
+  const list = $("ul")
+
+  // 메뉴 추가
+  form.addEventListener("submit", (e) => {
+    e.preventDefault()
+    addMenu()
+  })
+
+  // 메뉴 수정/삭제
+  list.addEventListener("click", (e) => {
+    if (e.target.classList.contains("data-edit")) {
+      updateMenu(e)
+    }
+    if (e.target.classList.contains("data-remove")) {
+      removeMenu(e)
+    }
+  })
+}
+
+/*
+ * render 내부에서 menu 상태를 받아 HTML 태그 구조를 반환하는 함수
+ **/
+function template(menu) {
+  return menu
+    .map(
+      (name, idx) =>
+        `
+			<li class="menu-list-item d-flex items-center py-2">
 				<span class="w-100 pl-2 menu-name">${name}</span>
 				<button
 					type="button"
-					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button data-soldOut"
-				>
-					품절
-				</button>
-				<button
-					type="button"
 					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button data-edit"
+					data-index=${idx}
 				>
 					수정
 				</button>
 				<button
 					type="button"
 					class="bg-gray-50 text-gray-500 text-sm menu-remove-button data-remove"
+					data-index=${idx}
 				>
 					삭제
 				</button>
+			</li>
 			`
-
-// TODO 커링으로 구현하고싶은데...
-const mapInfo = (tab) => MENUINFOS[tab]
-
-const mainWrapperTemplate = (category) => {
-  const [tab, tabName, emoji] = mapInfo(category)
-  return `
-    <div class="wrapper bg-white p-10">
-      <div class="heading d-flex justify-between">
-        <h2 class="mt-1">${emoji} ${tabName} 메뉴 관리</h2>
-        <span class="mr-2 mt-4 menu-count">총 0개</span>
-      </div>
-      <form id="${tab}-menu-form">
-        <div class="d-flex w-100">
-          <label for="${tab}-menu-name" class="input-label" hidden>
-            ${tabName} 메뉴 이름
-          </label>
-          <input
-            type="text"
-            id="${tab}-menu-name"
-            name="${tab}MenuName"
-            class="input-field"
-            placeholder="${tabName} 메뉴 이름"
-            autocomplete="off"
-          />
-          <button
-            type="submit"
-            name="submit"
-            id="${tab}-menu-submit-button"
-            class="input-submit bg-green-600 ml-2"
-          >
-            확인
-          </button>
-        </div>
-      </form>
-      <ul id="${tab}-menu-list" class="mt-3 pl-0"></ul>
-    </div>
-  `
+    )
+    .join("")
 }
 
-function createItem(name, soldOut = false) {
-  const item = document.createElement("li")
-  item.className = "menu-list-item d-flex items-center py-2"
-  item.innerHTML = createHTML(name, soldOut)
-
-  if (soldOut) {
-    item.querySelector("span").classList.add("sold-out")
-  }
-
-  const list = $(`#${tab}-menu-list`)
-  list.appendChild(item)
-
-  updateTotal()
-}
-
+/*
+ * 하단의 addMenu, updateMenu, removeMenu, updateTotal은 render 함수 내부에서 호출하는 함수
+ * DOM 요소에는 값을 가져올 때만 접근하고, 값이 변경될 때 DOM 요소를 직접 접근하지 않고 setState로 처리함
+ **/
 function addMenu() {
-  const input = $(`#${tab}-menu-name`)
+  const { menu } = state
+  const input = $("input")
 
   const name = input.value
+
   if (!name) return
 
-  createItem(name)
-  updateState(ACTIONS.ADD_MENU, { name, soldOut: false })
+  setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
 
   input.value = ""
 }
 
 function updateMenu(e) {
-  const span = e.target.closest("li").querySelector("span")
+  const { menu } = state
 
-  const ret = prompt("메뉴명을 수정하세요", span.innerHTML)
+  const prevName = e.target.closest("li").querySelector("span").innerText
+  const index = Number(e.target.dataset.index)
 
-  if (ret === null) return
+  const newName = prompt("메뉴명을 수정하세요", prevName)
 
-  updateState(ACTIONS.UPDATE_MENU, { prevName: span.innerHTML, newName: ret })
-  span.innerHTML = ret
-}
+  if (newName === null) return
 
-function toggleSoldOut(e) {
-  const span = e.target.closest("li").querySelector("span")
-  span.classList.toggle("sold-out")
-
-  updateState(ACTIONS.TOGGLE_SOLDOUT, span.innerText)
+  // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
+  setState({
+    menu: menu.map((name, idx) => {
+      if (index === idx) return newName
+      return name
+    }),
+  })
 }
 
 function removeMenu(e) {
-  const li = e.target.closest("li")
+  const { menu } = state
 
   const ret = confirm("정말 삭제하시겠습니까?")
-
   if (!ret) return
 
-  li.remove()
+  const index = Number(e.target.dataset.index)
 
-  const span = li.querySelector("span")
-
-  updateState(ACTIONS.REMOVE_MENU, span.innerText)
-
-  updateTotal()
+  // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
+  setState({
+    menu: menu.filter((_, idx) => index !== idx),
+  })
 }
 
-function render() {
-  const form = $(`#${tab}-menu-form`)
-  const list = $(`#${tab}-menu-list`)
-
-  nav.addEventListener("click", (e) => {
-    changeTab(e)
-  })
-
-  //  form 요소의 상위 submit 이벤트로 하위 요소의 click, keyup 이벤트 처리
-  form.addEventListener("submit", (e) => {
-    e.preventDefault()
-    addMenu()
-  })
-
-  // ul 요소에 수정/삭제 button 이벤트 위임
-  list.addEventListener("click", (e) => {
-    if (e.target.classList.contains("data-edit")) {
-      updateMenu(e)
-    }
-    if (e.target.classList.contains("data-soldOut")) {
-      toggleSoldOut(e)
-    }
-    if (e.target.classList.contains("data-remove")) {
-      removeMenu(e)
-    }
-  })
-
-  const menuItems = state[tab]
-  menuItems.map(({ name, soldOut }) => createItem(name, soldOut))
+function updateTotal() {
+  const { menu } = state
+  const cnt = $(".menu-count")
+  cnt.innerText = `총 ${menu.length}개`
 }
-
-render()
