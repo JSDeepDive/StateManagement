@@ -45,7 +45,6 @@
 // TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
 // TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
 // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
-// TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
 // TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
 
 /*
@@ -216,7 +215,6 @@ const changeTab = (e) => {
   const newTab = e.target.dataset.categoryName
 
   if (currTab === newTab) return
-
   setState({ tab: newTab })
 }
 
@@ -275,31 +273,38 @@ const toggleMenu = (e) => {
  * TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
  **/
 const setEventHandler = () => {
-  const nav = $("nav")
+  const app = $("#app")
   const form = $("form")
-  const list = $("ul")
 
-  // 메뉴탭 전환
-  nav.addEventListener("click", changeTab)
-
-  // 메뉴 추가
   form.addEventListener("submit", (e) => {
     e.preventDefault()
+  })
+
+  // 메뉴탭 전환
+  app.addEventListener("click", (e) => {
+    if (e.target.classList.contains("cafe-category-name")) {
+      changeTab(e)
+      return
+    }
+  })
+
+  // 메뉴 추가
+  app.addEventListener("submit", () => {
     addMenu()
   })
 
-  // 메뉴 수정/삭제
-  list.addEventListener("click", (e) => {
-    if (e.target.classList.contains("data-edit")) {
+  // 메뉴 토글/수정/삭제
+  app.addEventListener("click", (e) => {
+    if (e.target.classList.contains("toggle-btn")) {
+      toggleMenu(e)
+      return
+    }
+    if (e.target.classList.contains("edit-btn")) {
       updateMenu(e)
       return
     }
-    if (e.target.classList.contains("data-remove")) {
+    if (e.target.classList.contains("remove-btn")) {
       removeMenu(e)
-      return
-    }
-    if (e.target.classList.contains("data-toggle")) {
-      toggleMenu(e)
       return
     }
   })
@@ -341,21 +346,21 @@ const template = (menu) => {
 				<span class="w-100 pl-2 menu-name ${soldOut ? "sold-out" : ""}">${name}</span>
 				<button
 					type="button"
-					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button data-toggle"
+					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button toggle-btn"
 					data-index=${idx}
 				>
 					품절
 				</button>
 				<button
 					type="button"
-					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button data-edit"
+					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button edit-btn"
 					data-index=${idx}
 				>
 					수정
 				</button>
 				<button
 					type="button"
-					class="bg-gray-50 text-gray-500 text-sm menu-remove-button data-remove"
+					class="bg-gray-50 text-gray-500 text-sm menu-remove-button remove-btn"
 					data-index=${idx}
 				>
 					삭제
