@@ -19,7 +19,7 @@
  * [ ] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
  * [ ] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
  * [ ] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
- * [ ] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+ * [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
  * (v1) 상태 관리로 메뉴 관리하기
  *
  * **********************************************************************
@@ -127,6 +127,16 @@ function reducer(state = initialState, action) {
         (_, idx) => idx !== removeIdx
       )
       return { ...state, menuList: { ...state.menuList, [tab]: removedMenu } }
+    case TOGGLE_MENU:
+      const { toggleIdx } = payload
+      const toggledMenu = state.menuList[tab].map((item, idx) => {
+        if (idx === toggleIdx) {
+          const toggledItem = { ...item, soldOut: !item.soldOut }
+          return toggledItem
+        }
+        return item
+      })
+      return { ...state, menuList: { ...state.menuList, [tab]: toggledMenu } }
     default:
       return { ...state }
   }
@@ -141,7 +151,7 @@ const store = createStore(reducer)
 
 // state 상태 변화할 때마다 로그 찍는 함수 등록
 store.subscribe(function () {
-  console.log(store.getState())
+  console.log("[state changed]", store.getState())
 })
 
 store.subscribe(render)
@@ -203,9 +213,15 @@ function setEventHandler() {
   list.addEventListener("click", (e) => {
     if (e.target.classList.contains("data-edit")) {
       updateMenu(e)
+      return
     }
     if (e.target.classList.contains("data-remove")) {
       removeMenu(e)
+      return
+    }
+    if (e.target.classList.contains("data-toggle")) {
+      toggleMenu(e)
+      return
     }
   })
 }
@@ -216,10 +232,17 @@ function setEventHandler() {
 function template(menu) {
   return menu
     .map(
-      ({ name }, idx) =>
+      ({ name, soldOut }, idx) =>
         `
 			<li class="menu-list-item d-flex items-center py-2">
-				<span class="w-100 pl-2 menu-name">${name}</span>
+				<span class="w-100 pl-2 menu-name ${soldOut ? "sold-out" : ""}">${name}</span>
+				<button
+					type="button"
+					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button data-toggle"
+					data-index=${idx}
+				>
+					품절
+				</button>
 				<button
 					type="button"
 					class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button data-edit"
@@ -286,6 +309,12 @@ function removeMenu(e) {
   // setState({
   //   menu: menu.filter((_, idx) => index !== idx),
   // })
+}
+
+function toggleMenu(e) {
+  const toggleIdx = Number(e.target.dataset.index)
+
+  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }))
 }
 
 function updateTotal() {
