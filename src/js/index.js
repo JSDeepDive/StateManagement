@@ -17,7 +17,7 @@
  * **********************************************************************
  * Step2
  * [ ] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
- * [ ] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
+ * [v] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
  * [ ] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
  * [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
  * (v1) 상태 관리로 메뉴 관리하기
@@ -56,6 +56,7 @@ function createStore(reducer) {
   }
 }
 
+// TODO 상수로 빼는 이유: 휴먼 에러 방지(실제 desert 사례)
 const ESPRESSO = "espresso"
 const FRAPPUCINO = "frappuccino"
 const BLENDED = "blended"
@@ -142,7 +143,7 @@ function reducer(state = initialState, action) {
   }
 }
 
-// TODO 커링 함수로 변경
+// TODO 커링 함수로 변경: 지연 실행
 const actionCreator = (type, payload) => {
   return { type, payload }
 }
@@ -151,7 +152,7 @@ const store = createStore(reducer)
 
 // state 상태 변화할 때마다 로그 찍는 함수 등록
 store.subscribe(function () {
-  console.log("[state changed]", store.getState())
+  console.log("[Global State Changed]", store.getState())
 })
 
 store.subscribe(render)
@@ -167,6 +168,7 @@ const initialRender = () => {
 /*
  * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
  **/
+// TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
 function render() {
   const { menuList } = store.getState()
   const { tab } = componentState
@@ -177,13 +179,13 @@ function render() {
   list.innerHTML = template(currTabMenu)
 
   updateTotal()
+  updateTitle()
 }
 
 /*
  * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
  **/
 const setState = (newState) => {
-  console.log("setState")
   const prevState = componentState
   componentState = { ...componentState, ...newState }
   console.log(
@@ -199,9 +201,14 @@ initialRender()
 /*
  * setEventHandler: DOM 요소에 이벤트 핸들러 등록
  **/
+// TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
 function setEventHandler() {
+  const nav = $("nav")
   const form = $("form")
   const list = $("ul")
+
+  // 메뉴탭 전환
+  nav.addEventListener("click", changeTab)
 
   // 메뉴 추가
   form.addEventListener("submit", (e) => {
@@ -323,4 +330,25 @@ function updateTotal() {
   const menu = menuList[tab]
   const cnt = $(".menu-count")
   cnt.innerText = `총 ${menu.length}개`
+}
+
+function updateTitle() {
+  const { tab } = componentState
+  const title = $("h2")
+
+  const categories = document.querySelectorAll("nav > button")
+  const currCategory = Array.from(categories).find(
+    (category) => category.dataset.categoryName === tab
+  ).innerText
+
+  title.innerText = `${currCategory} 메뉴 관리`
+}
+
+function changeTab(e) {
+  const { tab: currTab } = componentState
+  const newTab = e.target.dataset.categoryName
+
+  if (currTab === newTab) return
+
+  setState({ tab: newTab })
 }
