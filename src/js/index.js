@@ -103,33 +103,30 @@ function reducer(state = initialState, action) {
     case ADD_MENU:
       const { name } = payload
       const newItem = { name, soldOut: false }
-      console.log(state)
-      console.log(...state)
-      return { ...state, [tab]: [...state.menuList[tab], newItem] }
+      // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행
+      return {
+        ...state,
+        menuList: {
+          ...state.menuList,
+          [tab]: [...state.menuList[tab], newItem],
+        },
+      }
     case UPDATE_MENU:
       const { updateIdx, newName } = payload
-      const updatedMenu = state[tab].map((item, idx) => {
+      const updatedMenu = state.menuList[tab].map((item, idx) => {
         if (idx === updateIdx) {
           const updatedItem = { ...item, name: newName }
           return updatedItem
         }
         return item
       })
-      return { ...state, [tab]: updatedMenu }
+      return { ...state, menuList: { ...state.menuList, [tab]: updatedMenu } }
     case REMOVE_MENU:
       const { removeIdx } = payload
-      const removedMenu = state[tab].filter((item) => item.idx !== removeIdx)
-      return { ...state, [tab]: removedMenu }
-    case TOGGLE_MENU:
-      const { toggleIdx } = payload
-      const toggledMenu = state[tab].map((item, idx) => {
-        if (idx === toggleIdx) {
-          const toggledItem = { ...item, soldOut: !item.soldOut }
-          return toggledItem
-        }
-        return item
-      })
-      return { ...state, [tab]: toggledMenu }
+      const removedMenu = state.menuList[tab].filter(
+        (_, idx) => idx !== removeIdx
+      )
+      return { ...state, menuList: { ...state.menuList, [tab]: removedMenu } }
     default:
       return { ...state }
   }
