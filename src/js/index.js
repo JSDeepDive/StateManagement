@@ -33,8 +33,23 @@
  * **********************************************************************
  **/
 
+// NOTION KEYWORD
+// 카테고리 명칭 상수화: 휴먼 에러 방지 - 실제 desert 사례
+// 커링 함수: 지연 실행
+// store 클로저로 state private으로 구현
+// state가 최대 2 layer까지만 권장되는 까닭? ... spread 연산자 vs deepcopy(immutable.js)
+// globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어질 수 밖에 없는 까닭? state, props, useReducer
+
+// REFACTOR
+// TODO 커링 함수로 변경: 지연 실행
+// TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
+// TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
+// TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
+// TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
+// TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
+
 /*
- * MENU_CATEGORIES: 카테고리 명칭 상수화(휴먼 에러 방지 - 실제 desert 사례)
+ * MENU_CATEGORIES: 카테고리 명칭
  */
 const ESPRESSO = "espresso"
 const FRAPPUCINO = "frappuccino"
@@ -43,7 +58,7 @@ const TEAVANA = "teavana"
 const DESSERT = "dessert"
 
 /*
- * ACTION_TYPES: 액션 타입 명칭 상수화(휴먼 에러 방지)
+ * ACTION_TYPES: 액션 타입 명칭
  */
 const INIT_MENU = "init-menu"
 const ADD_MENU = "add-menu"
@@ -257,8 +272,8 @@ const toggleMenu = (e) => {
 
 /*
  * setEventHandler: DOM 요소에 이벤트 핸들러 등록
+ * TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
  **/
-// TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
 const setEventHandler = () => {
   const nav = $("nav")
   const form = $("form")
@@ -292,8 +307,8 @@ const setEventHandler = () => {
 
 /*
  * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
+ * TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
  **/
-// TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기
 const updateTotal = () => {
   const { menuList } = store.getState()
   const { tab } = componentState
@@ -353,8 +368,8 @@ const template = (menu) => {
 
 /*
  * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
+ * TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
  **/
-// TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
 const render = () => {
   const { menuList } = store.getState()
   const { tab } = componentState
