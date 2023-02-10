@@ -54,6 +54,21 @@ const TOGGLE_MENU = "toggle-menu"
 const $ = (selector) => document.querySelector(selector)
 
 /*
+ * componentState: 컴포넌트 내부에서 관리하는 상태
+ */
+let componentState = {
+  tab: ESPRESSO,
+}
+
+/*
+ * actionCreator: type과 payload를 받아 action 객체를 반환하는 함수
+ * TODO 커링 함수로 변경: 지연 실행
+ */
+const actionCreator = (type, payload) => {
+  return { type, payload }
+}
+
+/*
  * createStore(reducer): 전역 상태관리를 수행하는 store 객체를 반환하는 함수
  * store 객체에 dispatch, subscribe, getState 메서드만 반환하여, state 정보 은닉(클로저).
  * reducer: store에서 상태 변경을 위임하는 함수
@@ -61,7 +76,7 @@ const $ = (selector) => document.querySelector(selector)
  * (2) subscribe(callback): store에서 상태 변경이 수행된 후, 호출할 함수들을 전달함.
  * (3) getState(): store의 현재 상태를 반환함.
  */
-function createStore(reducer) {
+const createStore = (reducer) => {
   let state
   let callbacks = []
 
@@ -94,7 +109,7 @@ function createStore(reducer) {
 /*
  * saveState: localStorage에 접근해 store의 state를 저장하는 함수
  */
-function saveState() {
+const saveState = () => {
   const state = store.getState()
   localStorage.setItem("state", JSON.stringify(state))
 }
@@ -102,7 +117,7 @@ function saveState() {
 /*
  * getInitState: localStorage에서 초기 상태값을 가져오는 함수
  */
-function getInitState() {
+const getInitState = () => {
   const savedState = JSON.parse(localStorage.getItem("state"))
 
   if (savedState !== null) {
@@ -123,19 +138,12 @@ function getInitState() {
 }
 
 /*
- * componentState: 컴포넌트 내부에서 관리하는 상태
- */
-let componentState = {
-  tab: ESPRESSO,
-}
-
-// TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
-// TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
-// TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
-/*
  * reducer(state, action): state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
+ * TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
+ * TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
+ * TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
  */
-function reducer(state = getInitState(), action) {
+const reducer = (state = getInitState(), action) => {
   const { type, payload } = action
   const { tab } = componentState
   switch (type) {
@@ -182,66 +190,76 @@ function reducer(state = getInitState(), action) {
   }
 }
 
-// TODO 커링 함수로 변경: 지연 실행
-const actionCreator = (type, payload) => {
-  return { type, payload }
+/*
+ * 하단의 changeTab, addMenu, updateMenu, removeMenu, toggleMenu는 이벤트 핸들러로 등록되는 함수
+ * DOM 요소에는 사용자 입력값을 가져올 때만 접근하는 것 외에 직접 접근 하지 않음
+ * 하단 함수들은 setState나 dispatch를 통해 상태 변경 요청만 보냄
+ * 즉, 요청을 보낸 뒤, 따로 DOM 조작에 신경 쓸 필요 없음
+ **/
+const changeTab = (e) => {
+  const { tab: currTab } = componentState
+  const newTab = e.target.dataset.categoryName
+
+  if (currTab === newTab) return
+
+  setState({ tab: newTab })
 }
 
-const store = createStore(reducer)
+const addMenu = () => {
+  const input = $("input")
 
-// state 상태 변화할 때마다 로그 찍는 함수 등록
-store.subscribe(function () {
-  console.log("[Global State Changed]", store.getState())
-})
-store.subscribe(saveState)
-store.subscribe(render)
+  const name = input.value
 
-initialRender()
+  if (!name) return
 
-/*
- * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
- **/
-function initialRender() {
-  setEventHandler()
-  render()
+  store.dispatch(actionCreator(ADD_MENU, { name }))
+  // setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
+
+  input.value = ""
 }
 
-/*
- * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
- **/
-// TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
-function render() {
-  const { menuList } = store.getState()
-  const { tab } = componentState
-  const currTabMenu = menuList[tab]
+const updateMenu = (e) => {
+  const prevName = e.target.closest("li").querySelector("span").innerText
+  const updateIdx = Number(e.target.dataset.index)
 
-  const list = $("ul")
+  const newName = prompt("메뉴명을 수정하세요", prevName)
 
-  list.innerHTML = template(currTabMenu)
+  if (newName === null) return
 
-  updateTotal()
-  updateTitle()
+  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }))
+  // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
+  // setState({
+  //   menu: menu.map((name, idx) => {
+  //     if (index === idx) return newName
+  //     return name
+  //   }),
+  // })
 }
 
-/*
- * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
- **/
-function setState(newState) {
-  const prevState = componentState
-  componentState = { ...componentState, ...newState }
-  console.log(
-    `[setState]: \n(prevState) ${JSON.stringify(
-      prevState
-    )} \n(currState) ${JSON.stringify(componentState)}`
-  )
-  render()
+const removeMenu = (e) => {
+  const ret = confirm("정말 삭제하시겠습니까?")
+  if (!ret) return
+
+  const removeIdx = Number(e.target.dataset.index)
+
+  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }))
+  // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
+  // setState({
+  //   menu: menu.filter((_, idx) => index !== idx),
+  // })
+}
+
+const toggleMenu = (e) => {
+  const toggleIdx = Number(e.target.dataset.index)
+
+  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }))
 }
 
 /*
  * setEventHandler: DOM 요소에 이벤트 핸들러 등록
  **/
 // TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
-function setEventHandler() {
+const setEventHandler = () => {
   const nav = $("nav")
   const form = $("form")
   const list = $("ul")
@@ -273,9 +291,33 @@ function setEventHandler() {
 }
 
 /*
- * render 내부에서 menu 상태를 받아 HTML 태그 구조를 반환하는 함수
+ * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
  **/
-function template(menu) {
+// TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기
+const updateTotal = () => {
+  const { menuList } = store.getState()
+  const { tab } = componentState
+  const menu = menuList[tab]
+  const cnt = $(".menu-count")
+  cnt.innerText = `총 ${menu.length}개`
+}
+
+const updateTitle = () => {
+  const { tab } = componentState
+  const title = $("h2")
+
+  const categories = document.querySelectorAll("nav > button")
+  const currCategory = Array.from(categories).find(
+    (category) => category.dataset.categoryName === tab
+  ).innerText
+
+  title.innerText = `${currCategory} 메뉴 관리`
+}
+
+/*
+ * template: render 내부에서 menu 상태를 받아 HTML 태그 구조를 반환하는 함수
+ **/
+const template = (menu) => {
   return menu
     .map(
       ({ name, soldOut }, idx) =>
@@ -310,90 +352,54 @@ function template(menu) {
 }
 
 /*
- * 하단의 changeTab, addMenu, updateMenu, removeMenu, toggleMenu는 이벤트 핸들러로 등록되는 함수
- * DOM 요소에는 사용자 입력값을 가져올 때만 접근하는 것 외에 직접 접근 하지 않음
- * 하단 함수들은 setState나 dispatch를 통해 상태 변경 요청만 보냄
- * 즉, 요청을 보낸 뒤, 따로 DOM 조작에 신경 쓸 필요 없음
+ * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
  **/
-function changeTab(e) {
-  const { tab: currTab } = componentState
-  const newTab = e.target.dataset.categoryName
+// TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
+const render = () => {
+  const { menuList } = store.getState()
+  const { tab } = componentState
+  const currTabMenu = menuList[tab]
 
-  if (currTab === newTab) return
+  const list = $("ul")
 
-  setState({ tab: newTab })
-}
+  list.innerHTML = template(currTabMenu)
 
-function addMenu() {
-  const input = $("input")
-
-  const name = input.value
-
-  if (!name) return
-
-  store.dispatch(actionCreator(ADD_MENU, { name }))
-  // setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
-
-  input.value = ""
-}
-
-function updateMenu(e) {
-  const prevName = e.target.closest("li").querySelector("span").innerText
-  const updateIdx = Number(e.target.dataset.index)
-
-  const newName = prompt("메뉴명을 수정하세요", prevName)
-
-  if (newName === null) return
-
-  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }))
-  // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
-  // setState({
-  //   menu: menu.map((name, idx) => {
-  //     if (index === idx) return newName
-  //     return name
-  //   }),
-  // })
-}
-
-function removeMenu(e) {
-  const ret = confirm("정말 삭제하시겠습니까?")
-  if (!ret) return
-
-  const removeIdx = Number(e.target.dataset.index)
-
-  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }))
-  // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
-  // setState({
-  //   menu: menu.filter((_, idx) => index !== idx),
-  // })
-}
-
-function toggleMenu(e) {
-  const toggleIdx = Number(e.target.dataset.index)
-
-  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }))
+  updateTotal()
+  updateTitle()
 }
 
 /*
- * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
+ * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
  **/
-// TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기
-function updateTotal() {
-  const { menuList } = store.getState()
-  const { tab } = componentState
-  const menu = menuList[tab]
-  const cnt = $(".menu-count")
-  cnt.innerText = `총 ${menu.length}개`
+const initialRender = () => {
+  setEventHandler()
+  render()
 }
 
-function updateTitle() {
-  const { tab } = componentState
-  const title = $("h2")
-
-  const categories = document.querySelectorAll("nav > button")
-  const currCategory = Array.from(categories).find(
-    (category) => category.dataset.categoryName === tab
-  ).innerText
-
-  title.innerText = `${currCategory} 메뉴 관리`
+/*
+ * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
+ **/
+const setState = (newState) => {
+  const prevState = componentState
+  componentState = { ...componentState, ...newState }
+  console.log(
+    `[setState]: \n(prevState) ${JSON.stringify(
+      prevState
+    )} \n(currState) ${JSON.stringify(componentState)}`
+  )
+  render()
 }
+
+/*
+ * 메인 코드 실행
+ */
+
+const store = createStore(reducer)
+
+store.subscribe(function () {
+  console.log("[Global State Changed]", store.getState())
+})
+store.subscribe(saveState)
+store.subscribe(render)
+
+initialRender()
