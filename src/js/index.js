@@ -15,6 +15,7 @@ function createElem(item, name) {
   span.className = "w-100 pl-2 menu-name";
   span.innerHTML = name;
 
+  // TODO 인자를 전달하는 경우, 이벤트 리스너를 어떻게 삭제해야하는지.
   const edit = document.createElement("button");
   edit.type = "button";
   edit.className = "bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button";
