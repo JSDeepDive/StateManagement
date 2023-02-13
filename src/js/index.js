@@ -1,14 +1,21 @@
 // Step1: 돔 조작과 이벤트 핸들링으로 메뉴 관리하기
 
-const form = document.querySelector("#espresso-menu-form");
-const input = document.querySelector("#espresso-menu-name");
-const button = document.querySelector("#espresso-menu-submit-button");
-const list = document.querySelector("#espresso-menu-list");
-const cnt = document.querySelector(".menu-count");
-let nums = 0;
+const $$ = (element) => (selector) => {
+  const arr = element.querySelectorAll(selector);
+  if (arr.length === 1) {
+    return arr[0];
+  }
+  return arr;
+};
 
-// TODO 1. 메뉴 추가
-// - [] form 요소의 submit 이벤트로 addMenu 이벤트 핸들러 바인딩
+const $ = $$(document);
+
+const form = $("#espresso-menu-form");
+const input = $("#espresso-menu-name");
+const button = $("#espresso-menu-submit-button");
+const list = $("#espresso-menu-list");
+const cnt = $(".menu-count");
+let nums = 0;
 
 function createElem(item, name) {
   const span = document.createElement("span");
@@ -20,21 +27,13 @@ function createElem(item, name) {
   edit.type = "button";
   edit.className = "bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button";
   edit.innerHTML = "수정";
-  edit.addEventListener("click", () => {
-    updateMenu(span);
-  });
+  edit.addEventListener("click", updateMenuBind(edit, span));
 
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "bg-gray-50 text-gray-500 text-sm menu-remove-button";
   remove.innerHTML = "삭제";
-  remove.addEventListener(
-    "click",
-    () => {
-      removeMenu(item);
-    },
-    { once: true }
-  );
+  remove.addEventListener("click", removeMenuBind(remove, item));
 
   item.appendChild(span);
   item.appendChild(edit);
@@ -62,9 +61,13 @@ function addMenu() {
   input.value = "";
 }
 
-// TODO 2. 메뉴 수정/삭제
-// - [ ] createElem 함수를 data-* 속성을 적용한 html 템플릿으로 대체.
-// - [ ] 메뉴 수정과 삭제 이벤트 처리를 <ul> 요소에 위임.
+const binder =
+  (func) =>
+  (thisArg, ...args) =>
+    func.bind(thisArg, ...args);
+const updateMenuBind = binder(updateMenu);
+const removeMenuBind = binder(removeMenu);
+
 function updateMenu(span) {
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML);
   if (ret === null) return;
@@ -75,11 +78,25 @@ function removeMenu(item) {
   const ret = confirm("정말 삭제하시겠습니까?");
   if (!ret) return;
   list.removeChild(item);
+
+  // 이벤트 리스너 해제
+  removeEventListeners(
+    $$(item)("button"),
+    ["click", "click"],
+    [updateMenuBind, removeMenuBind]
+  );
+
   nums -= 1;
   updateTotal();
 }
 
-function App() {
+function removeEventListeners(elements, events, handlers) {
+  elements.forEach((elem, idx) =>
+    elem.removeEventListener(events[idx], handlers[idx])
+  );
+}
+
+function setEventListeners() {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
   });
@@ -91,6 +108,10 @@ function App() {
       addMenu();
     }
   });
+}
+
+function App() {
+  setEventListeners();
 }
 
 App();
