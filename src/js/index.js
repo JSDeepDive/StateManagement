@@ -86,6 +86,7 @@ function removeMenu(item) {
     [updateMenuBind, removeMenuBind]
   );
 
+  item = null;
   nums -= 1;
   updateTotal();
 }
