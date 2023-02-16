@@ -20,7 +20,7 @@
  * [v] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
  * [v] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 보이게 한다.
  * [v] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
- * (v1) 상태 관리로 메뉴 관리하기
+ * (v2) redux 모방해 상태 관리로 메뉴 관리하기
  * - createStore 메서드 통해 전역 상태 관리에 사용할 dispatch, subscribe, getState 메서드를 가진 객체 store 반환
  * - 메뉴 추가/업데이트/삭제/메뉴 품절 여부 표시 이벤트 핸들러의 setState를 store.dispatch(actionCreator(type, payload)) 형태로 수정
  * - 즉, 메뉴 관련 이벤트가 발생하면, actionCreator가 action 객체를 만들어 반환하여 dispatch에 전달
