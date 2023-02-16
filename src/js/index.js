@@ -56,15 +56,6 @@ const BLENDED = "blended";
 const TEAVANA = "teavana";
 const DESSERT = "dessert";
 
-/**
- * ACTION_TYPES: 액션 타입 명칭
- */
-const INIT_MENU = "init-menu";
-const ADD_MENU = "add-menu";
-const UPDATE_MENU = "update-menu";
-const REMOVE_MENU = "remove-menu";
-const TOGGLE_MENU = "toggle-menu";
-
 const $ = (selector) => document.querySelector(selector);
 
 /**
@@ -75,13 +66,30 @@ let componentState = {
 };
 
 /**
+ * ACTION_TYPES: 액션 타입 명칭
+ */
+const INIT_MENU = "init-menu";
+const ADD_MENU = "add-menu";
+const UPDATE_MENU = "update-menu";
+const REMOVE_MENU = "remove-menu";
+const TOGGLE_MENU = "toggle-menu";
+
+/**
  * @function actionCreator
  * @description type과 payload를 받아 action 객체를 반환하는 함수
- * @todo 커링 함수로 변경: 지연 실행
  */
-const actionCreator = (type, payload) => {
+const actionCreator = (type) => (payload) => {
   return { type, payload };
 };
+
+/**
+ * actionCreators
+ */
+const createInitAction = actionCreator(INIT_MENU);
+const createAddAction = actionCreator(ADD_MENU);
+const createUpdateAction = actionCreator(UPDATE_MENU);
+const createRemoveAction = actionCreator(REMOVE_MENU);
+const createToggleAction = actionCreator(TOGGLE_MENU);
 
 /**
  * @function createStore
@@ -242,8 +250,7 @@ const addMenu = () => {
 
   if (!name) return;
 
-  store.dispatch(actionCreator(ADD_MENU, { name }));
-  // setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
+  store.dispatch(createAddAction({ name }));
 
   input.value = "";
 };
@@ -261,14 +268,7 @@ const updateMenu = (e) => {
 
   if (newName === null) return;
 
-  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }));
-  // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
-  // setState({
-  //   menu: menu.map((name, idx) => {
-  //     if (index === idx) return newName
-  //     return name
-  //   }),
-  // })
+  store.dispatch(createUpdateAction({ updateIdx, newName }));
 };
 
 /**
@@ -282,11 +282,7 @@ const removeMenu = (e) => {
 
   const removeIdx = Number(e.target.dataset.index);
 
-  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }));
-  // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
-  // setState({
-  //   menu: menu.filter((_, idx) => index !== idx),
-  // })
+  store.dispatch(createRemoveAction({ removeIdx }));
 };
 
 /**
@@ -297,7 +293,7 @@ const removeMenu = (e) => {
 const toggleMenu = (e) => {
   const toggleIdx = Number(e.target.dataset.index);
 
-  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }));
+  store.dispatch(createToggleAction({ toggleIdx }));
 };
 
 /**
