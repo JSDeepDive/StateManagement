@@ -1,4 +1,4 @@
-/*
+/**
  * **********************************************************************
  * Step1
  * (v1) DOM 조작과 이벤트 핸들링으로 메뉴 CRUD
@@ -11,9 +11,9 @@
  * - (2) 상태 변화에 맞게 사용자에게 보여질 DOM 요소 조정 코드 render 함수로 추상화
  * - 이벤트 등록 함수 render 외부로 분리해 중복 등록 이슈 해결
  * **********************************************************************
- **/
+ */
 
-/*
+/**
  * **********************************************************************
  * Step2
  * [v] localStorage에 데이터를 저장하여 새로고침해도 데이터가 남아있게 한다.
@@ -31,7 +31,7 @@
  * - 상태 변경 시마다 localStorage에 신규 상태가 반영되고, 리렌더링이 일어날 수 있도록 해당 메서드들을 store.subscribe(메서드)에 전달함
  * - store의 상태에 접근해야 할 때, 항상 store.getState() 메서드를 통해 접근
  * **********************************************************************
- **/
+ */
 
 // NOTION KEYWORD
 // 카테고리 명칭 상수화: 휴먼 에러 방지 - 실제 desert 사례
@@ -47,42 +47,42 @@
 // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
 // TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
 
-/*
+/**
  * MENU_CATEGORIES: 카테고리 명칭
  */
-const ESPRESSO = "espresso"
-const FRAPPUCINO = "frappuccino"
-const BLENDED = "blended"
-const TEAVANA = "teavana"
-const DESSERT = "dessert"
+const ESPRESSO = "espresso";
+const FRAPPUCINO = "frappuccino";
+const BLENDED = "blended";
+const TEAVANA = "teavana";
+const DESSERT = "dessert";
 
-/*
+/**
  * ACTION_TYPES: 액션 타입 명칭
  */
-const INIT_MENU = "init-menu"
-const ADD_MENU = "add-menu"
-const UPDATE_MENU = "update-menu"
-const REMOVE_MENU = "remove-menu"
-const TOGGLE_MENU = "toggle-menu"
+const INIT_MENU = "init-menu";
+const ADD_MENU = "add-menu";
+const UPDATE_MENU = "update-menu";
+const REMOVE_MENU = "remove-menu";
+const TOGGLE_MENU = "toggle-menu";
 
-const $ = (selector) => document.querySelector(selector)
+const $ = (selector) => document.querySelector(selector);
 
-/*
+/**
  * componentState: 컴포넌트 내부에서 관리하는 상태
  */
 let componentState = {
   tab: ESPRESSO,
-}
+};
 
 /*
  * actionCreator: type과 payload를 받아 action 객체를 반환하는 함수
  * TODO 커링 함수로 변경: 지연 실행
  */
 const actionCreator = (type, payload) => {
-  return { type, payload }
-}
+  return { type, payload };
+};
 
-/*
+/**
  * createStore(reducer): 전역 상태관리를 수행하는 store 객체를 반환하는 함수
  * store 객체에 dispatch, subscribe, getState 메서드만 반환하여, state 정보 은닉(클로저).
  * reducer: store에서 상태 변경을 위임하는 함수
@@ -91,25 +91,25 @@ const actionCreator = (type, payload) => {
  * (3) getState(): store의 현재 상태를 반환함.
  */
 const createStore = (reducer) => {
-  let state
-  let callbacks = []
+  let state;
+  let callbacks = [];
 
-  dispatch(actionCreator(INIT_MENU, {}))
+  dispatch(actionCreator(INIT_MENU, {}));
 
   function dispatch(action) {
     // state 불변성 유지. state는 오직 store 내에서만 변경 가능.
-    state = reducer(state, action)
+    state = reducer(state, action);
     // state 변경 시마다 등록된 콜백함수들 동기적으로 호출
-    callbacks.forEach((callback) => callback())
+    callbacks.forEach((callback) => callback());
   }
 
   function subscribe(callback) {
-    callbacks.push(callback)
+    callbacks.push(callback);
   }
 
   function getState() {
-    return state
-    return { ...state } // TODO 차이?
+    return state;
+    return { ...state }; // TODO 차이?
   }
 
   // 클로저로 private state, private callbacks 구현해 정보 은닉
@@ -117,25 +117,25 @@ const createStore = (reducer) => {
     dispatch,
     subscribe,
     getState,
-  }
-}
+  };
+};
 
-/*
+/**
  * saveState: localStorage에 접근해 store의 state를 저장하는 함수
  */
 const saveState = () => {
-  const state = store.getState()
-  localStorage.setItem("state", JSON.stringify(state))
-}
+  const state = store.getState();
+  localStorage.setItem("state", JSON.stringify(state));
+};
 
-/*
+/**
  * getInitState: localStorage에서 초기 상태값을 가져오는 함수
  */
 const getInitState = () => {
-  const savedState = JSON.parse(localStorage.getItem("state"))
+  const savedState = JSON.parse(localStorage.getItem("state"));
 
   if (savedState !== null) {
-    return savedState
+    return savedState;
   }
 
   const stateTemplate = {
@@ -146,100 +146,100 @@ const getInitState = () => {
       [TEAVANA]: [],
       [DESSERT]: [],
     },
-  }
+  };
 
-  return stateTemplate
-}
+  return stateTemplate;
+};
 
-/*
+/**
  * reducer(state, action): state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
  * TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
  * TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
  * TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
  */
 const reducer = (state = getInitState(), action) => {
-  const { type, payload } = action
-  const { tab } = componentState
+  const { type, payload } = action;
+  const { tab } = componentState;
   switch (type) {
     case INIT_MENU:
-      return { ...state }
+      return { ...state };
     case ADD_MENU:
-      const { name } = payload
-      const newItem = { name, soldOut: false }
+      const { name } = payload;
+      const newItem = { name, soldOut: false };
       return {
         ...state,
         menuList: {
           ...state.menuList,
           [tab]: [...state.menuList[tab], newItem],
         },
-      }
+      };
     case UPDATE_MENU:
-      const { updateIdx, newName } = payload
+      const { updateIdx, newName } = payload;
       const updatedMenu = state.menuList[tab].map((item, idx) => {
         if (idx === updateIdx) {
-          const updatedItem = { ...item, name: newName }
-          return updatedItem
+          const updatedItem = { ...item, name: newName };
+          return updatedItem;
         }
-        return item
-      })
-      return { ...state, menuList: { ...state.menuList, [tab]: updatedMenu } }
+        return item;
+      });
+      return { ...state, menuList: { ...state.menuList, [tab]: updatedMenu } };
     case REMOVE_MENU:
-      const { removeIdx } = payload
+      const { removeIdx } = payload;
       const removedMenu = state.menuList[tab].filter(
         (_, idx) => idx !== removeIdx
-      )
-      return { ...state, menuList: { ...state.menuList, [tab]: removedMenu } }
+      );
+      return { ...state, menuList: { ...state.menuList, [tab]: removedMenu } };
     case TOGGLE_MENU:
-      const { toggleIdx } = payload
+      const { toggleIdx } = payload;
       const toggledMenu = state.menuList[tab].map((item, idx) => {
         if (idx === toggleIdx) {
-          const toggledItem = { ...item, soldOut: !item.soldOut }
-          return toggledItem
+          const toggledItem = { ...item, soldOut: !item.soldOut };
+          return toggledItem;
         }
-        return item
-      })
-      return { ...state, menuList: { ...state.menuList, [tab]: toggledMenu } }
+        return item;
+      });
+      return { ...state, menuList: { ...state.menuList, [tab]: toggledMenu } };
     default:
-      return { ...state }
+      return { ...state };
   }
-}
+};
 
-/*
+/**
  * 하단의 changeTab, addMenu, updateMenu, removeMenu, toggleMenu는 이벤트 핸들러로 등록되는 함수
  * DOM 요소에는 사용자 입력값을 가져올 때만 접근하는 것 외에 직접 접근 하지 않음
  * 하단 함수들은 setState나 dispatch를 통해 상태 변경 요청만 보냄
  * 즉, 요청을 보낸 뒤, 따로 DOM 조작에 신경 쓸 필요 없음
- **/
+ */
 const changeTab = (e) => {
-  const { tab: currTab } = componentState
-  const newTab = e.target.dataset.categoryName
+  const { tab: currTab } = componentState;
+  const newTab = e.target.dataset.categoryName;
 
-  if (currTab === newTab) return
-  setState({ tab: newTab })
-}
+  if (currTab === newTab) return;
+  setState({ tab: newTab });
+};
 
 const addMenu = () => {
-  const input = $("input")
+  const input = $("input");
 
-  const name = input.value
+  const name = input.value;
 
-  if (!name) return
+  if (!name) return;
 
-  store.dispatch(actionCreator(ADD_MENU, { name }))
+  store.dispatch(actionCreator(ADD_MENU, { name }));
   // setState({ menu: [...menu, name] }) // setState 통해 메뉴 추가시 자동으로 DOM 요소 처리함
 
-  input.value = ""
-}
+  input.value = "";
+};
 
 const updateMenu = (e) => {
-  const prevName = e.target.closest("li").querySelector("span").innerText
-  const updateIdx = Number(e.target.dataset.index)
+  const prevName = e.target.closest("li").querySelector("span").innerText;
+  const updateIdx = Number(e.target.dataset.index);
 
-  const newName = prompt("메뉴명을 수정하세요", prevName)
+  const newName = prompt("메뉴명을 수정하세요", prevName);
 
-  if (newName === null) return
+  if (newName === null) return;
 
-  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }))
+  store.dispatch(actionCreator(UPDATE_MENU, { updateIdx, newName }));
   // setState 통해 메뉴 업데이트 시 자동으로 DOM 요소 처리함
   // setState({
   //   menu: menu.map((name, idx) => {
@@ -247,96 +247,96 @@ const updateMenu = (e) => {
   //     return name
   //   }),
   // })
-}
+};
 
 const removeMenu = (e) => {
-  const ret = confirm("정말 삭제하시겠습니까?")
-  if (!ret) return
+  const ret = confirm("정말 삭제하시겠습니까?");
+  if (!ret) return;
 
-  const removeIdx = Number(e.target.dataset.index)
+  const removeIdx = Number(e.target.dataset.index);
 
-  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }))
+  store.dispatch(actionCreator(REMOVE_MENU, { removeIdx }));
   // setState 통해 메뉴 삭제 시 자동으로 DOM 요소 처리함
   // setState({
   //   menu: menu.filter((_, idx) => index !== idx),
   // })
-}
+};
 
 const toggleMenu = (e) => {
-  const toggleIdx = Number(e.target.dataset.index)
+  const toggleIdx = Number(e.target.dataset.index);
 
-  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }))
-}
+  store.dispatch(actionCreator(TOGGLE_MENU, { toggleIdx }));
+};
 
-/*
+/**
  * setEventHandler: DOM 요소에 이벤트 핸들러 등록
  * TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
- **/
+ */
 const setEventHandler = () => {
-  const app = $("#app")
-  const form = $("form")
+  const app = $("#app");
+  const form = $("form");
 
   form.addEventListener("submit", (e) => {
-    e.preventDefault()
-  })
+    e.preventDefault();
+  });
 
   // 메뉴탭 전환
   app.addEventListener("click", (e) => {
     if (e.target.classList.contains("cafe-category-name")) {
-      changeTab(e)
-      return
+      changeTab(e);
+      return;
     }
-  })
+  });
 
   // 메뉴 추가
   app.addEventListener("submit", () => {
-    addMenu()
-  })
+    addMenu();
+  });
 
   // 메뉴 토글/수정/삭제
   app.addEventListener("click", (e) => {
     if (e.target.classList.contains("toggle-btn")) {
-      toggleMenu(e)
-      return
+      toggleMenu(e);
+      return;
     }
     if (e.target.classList.contains("edit-btn")) {
-      updateMenu(e)
-      return
+      updateMenu(e);
+      return;
     }
     if (e.target.classList.contains("remove-btn")) {
-      removeMenu(e)
-      return
+      removeMenu(e);
+      return;
     }
-  })
-}
+  });
+};
 
-/*
+/**
  * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
  * TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
- **/
+ */
 const updateTotal = () => {
-  const { menuList } = store.getState()
-  const { tab } = componentState
-  const menu = menuList[tab]
-  const cnt = $(".menu-count")
-  cnt.innerText = `총 ${menu.length}개`
-}
+  const { menuList } = store.getState();
+  const { tab } = componentState;
+  const menu = menuList[tab];
+  const cnt = $(".menu-count");
+  cnt.innerText = `총 ${menu.length}개`;
+};
 
 const updateTitle = () => {
-  const { tab } = componentState
-  const title = $("h2")
+  const { tab } = componentState;
+  const title = $("h2");
 
-  const categories = document.querySelectorAll("nav > button")
+  const categories = document.querySelectorAll("nav > button");
   const currCategory = Array.from(categories).find(
     (category) => category.dataset.categoryName === tab
-  ).innerText
+  ).innerText;
 
-  title.innerText = `${currCategory} 메뉴 관리`
-}
+  title.innerText = `${currCategory} 메뉴 관리`;
+};
 
-/*
+/**
  * template: render 내부에서 menu 상태를 받아 HTML 태그 구조를 반환하는 함수
- **/
+ */
 const template = (menu) => {
   return menu
     .map(
@@ -368,58 +368,58 @@ const template = (menu) => {
 			</li>
 			`
     )
-    .join("")
-}
+    .join("");
+};
 
 /*
  * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
  * TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
  **/
 const render = () => {
-  const { menuList } = store.getState()
-  const { tab } = componentState
-  const currTabMenu = menuList[tab]
+  const { menuList } = store.getState();
+  const { tab } = componentState;
+  const currTabMenu = menuList[tab];
 
-  const list = $("ul")
+  const list = $("ul");
 
-  list.innerHTML = template(currTabMenu)
+  list.innerHTML = template(currTabMenu);
 
-  updateTotal()
-  updateTitle()
-}
+  updateTotal();
+  updateTitle();
+};
 
 /*
  * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
  **/
 const initialRender = () => {
-  setEventHandler()
-  render()
-}
+  setEventHandler();
+  render();
+};
 
-/*
+/**
  * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
- **/
+ */
 const setState = (newState) => {
-  const prevState = componentState
-  componentState = { ...componentState, ...newState }
+  const prevState = componentState;
+  componentState = { ...componentState, ...newState };
   console.log(
     `[setState]: \n(prevState) ${JSON.stringify(
       prevState
     )} \n(currState) ${JSON.stringify(componentState)}`
-  )
-  render()
-}
+  );
+  render();
+};
 
-/*
+/**
  * 메인 코드 실행
  */
 
-const store = createStore(reducer)
+const store = createStore(reducer);
 
 store.subscribe(function () {
-  console.log("[Global State Changed]", store.getState())
-})
-store.subscribe(saveState)
-store.subscribe(render)
+  console.log("[Global State Changed]", store.getState());
+});
+store.subscribe(saveState);
+store.subscribe(render);
 
-initialRender()
+initialRender();
