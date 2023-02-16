@@ -74,21 +74,23 @@ let componentState = {
   tab: ESPRESSO,
 };
 
-/*
- * actionCreator: type과 payload를 받아 action 객체를 반환하는 함수
- * TODO 커링 함수로 변경: 지연 실행
+/**
+ * @function actionCreator
+ * @description type과 payload를 받아 action 객체를 반환하는 함수
+ * @todo 커링 함수로 변경: 지연 실행
  */
 const actionCreator = (type, payload) => {
   return { type, payload };
 };
 
 /**
- * createStore(reducer): 전역 상태관리를 수행하는 store 객체를 반환하는 함수
- * store 객체에 dispatch, subscribe, getState 메서드만 반환하여, state 정보 은닉(클로저).
- * reducer: store에서 상태 변경을 위임하는 함수
- * (1) dispatch(action): 특정 action이 발생했음을 알려, store에서 상태를 변경하도록 함.
- * (2) subscribe(callback): store에서 상태 변경이 수행된 후, 호출할 함수들을 전달함.
- * (3) getState(): store의 현재 상태를 반환함.
+ * @function createStore
+ * @param {function} reducer
+ * @description 전역 상태관리를 수행하는 store 객체를 반환하는 함수.
+ * 							store 객체에 dispatch, subscribe, getState 메서드만 반환하여, state 정보 은닉(클로저).
+ * 							(1) dispatch(action): 특정 action이 발생했음을 알려, store에서 상태를 변경하도록 함.
+ * 							(2) subscribe(callback): store에서 상태 변경이 수행된 후, 호출할 함수들을 전달함.
+ * 							(3) getState(): store의 현재 상태를 반환함.
  */
 const createStore = (reducer) => {
   let state;
@@ -121,7 +123,8 @@ const createStore = (reducer) => {
 };
 
 /**
- * saveState: localStorage에 접근해 store의 state를 저장하는 함수
+ * @function savedState
+ * @description localStorage에 접근해 store의 state를 저장하는 함수
  */
 const saveState = () => {
   const state = store.getState();
@@ -129,7 +132,8 @@ const saveState = () => {
 };
 
 /**
- * getInitState: localStorage에서 초기 상태값을 가져오는 함수
+ * @function getInitState
+ * @description localStorage에서 초기 상태값을 가져오는 함수
  */
 const getInitState = () => {
   const savedState = JSON.parse(localStorage.getItem("state"));
@@ -152,10 +156,13 @@ const getInitState = () => {
 };
 
 /**
- * reducer(state, action): state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
- * TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
- * TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
- * TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
+ * @function reducer
+ * @param {Object} state
+ * @param {Object} action
+ * @description state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
+ * @toddo const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
+ * @todo reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
+ * @todo 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
  */
 const reducer = (state = getInitState(), action) => {
   const { type, payload } = action;
@@ -210,6 +217,12 @@ const reducer = (state = getInitState(), action) => {
  * 하단 함수들은 setState나 dispatch를 통해 상태 변경 요청만 보냄
  * 즉, 요청을 보낸 뒤, 따로 DOM 조작에 신경 쓸 필요 없음
  */
+
+/**
+ * @function changeTab
+ * @param {Event} e
+ * @description	사용자가 네비게이션 바에서 탭 전환시 탭 상태 변경하는 함수
+ */
 const changeTab = (e) => {
   const { tab: currTab } = componentState;
   const newTab = e.target.dataset.categoryName;
@@ -218,6 +231,10 @@ const changeTab = (e) => {
   setState({ tab: newTab });
 };
 
+/**
+ * @function addMenu
+ * @description 사용자가 input에 메뉴명을 기입한 뒤, enter를 누르거나 제출 버튼을 누른 경우 메뉴를 추가함
+ */
 const addMenu = () => {
   const input = $("input");
 
@@ -231,6 +248,11 @@ const addMenu = () => {
   input.value = "";
 };
 
+/**
+ * @function updateMenu
+ * @param {Event} e
+ * @description 사용자가 수정 버튼을 누른 뒤, confirm에 수정 메뉴 이름을 기입하면, 헤당 메뉴의 이름을 수정함
+ */
 const updateMenu = (e) => {
   const prevName = e.target.closest("li").querySelector("span").innerText;
   const updateIdx = Number(e.target.dataset.index);
@@ -249,6 +271,11 @@ const updateMenu = (e) => {
   // })
 };
 
+/**
+ * @function removeMenu
+ * @param {Event} e
+ * @description 사용자가 삭제 버튼을 누르면, 해당 메뉴를 삭제함
+ */
 const removeMenu = (e) => {
   const ret = confirm("정말 삭제하시겠습니까?");
   if (!ret) return;
@@ -262,6 +289,11 @@ const removeMenu = (e) => {
   // })
 };
 
+/**
+ * @function toggleMenu
+ * @param {Event} e
+ * @description 사용자가 품절 버튼 누르면 해당 메뉴 품절 여부를 토글함
+ */
 const toggleMenu = (e) => {
   const toggleIdx = Number(e.target.dataset.index);
 
@@ -269,8 +301,8 @@ const toggleMenu = (e) => {
 };
 
 /**
- * setEventHandler: DOM 요소에 이벤트 핸들러 등록
- * TODO 향후 추상화하려면 모든 이벤트를 최상위객체 .app에 위임
+ * @function setEventHandler
+ * @description DOM 요소에 직접 접근해 이벤트 핸들러 등록
  */
 const setEventHandler = () => {
   const app = $("#app");
@@ -314,6 +346,11 @@ const setEventHandler = () => {
  * 하단의 updateTotal, updateTitle은 DOM 요소에 직접 접근하여 DOM 요소를 조작하여 직접 렌더링 수행
  * TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
  */
+
+/**
+ * @function updateTotal
+ * @description 상단바의 총 메뉴 개수를 업데이트
+ */
 const updateTotal = () => {
   const { menuList } = store.getState();
   const { tab } = componentState;
@@ -322,6 +359,10 @@ const updateTotal = () => {
   cnt.innerText = `총 ${menu.length}개`;
 };
 
+/**
+ * @function updateTitle
+ * @description 상단바의 메뉴 카테고리명 업데이트
+ */
 const updateTitle = () => {
   const { tab } = componentState;
   const title = $("h2");
@@ -335,7 +376,10 @@ const updateTitle = () => {
 };
 
 /**
- * template: render 내부에서 menu 상태를 받아 HTML 태그 구조를 반환하는 함수
+ * @function template
+ * @param {Object} menu
+ * @description 렌더링 시 상태에서 메뉴 리스트를 바탕으로 HTML 템플릿을 생성해 리턴하는 함수
+ *
  */
 const template = (menu) => {
   return menu
@@ -371,10 +415,12 @@ const template = (menu) => {
     .join("");
 };
 
-/*
- * render: 맨 처음이나 컴포넌트 상태 변화시 DOM 요소 조정 과정을 추상화한 함수
- * TODO globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
- **/
+/**
+ * @function render
+ * @description DOM 요소에 직접 접근해 조작하는 과정을 추상화 함수
+ * 							페이지 최초 렌더링 시나 컴포넌트 상태 변화시 호출됨
+ * @todo globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
+ */
 const render = () => {
   const { menuList } = store.getState();
   const { tab } = componentState;
@@ -388,16 +434,21 @@ const render = () => {
   updateTitle();
 };
 
-/*
- * initialRender : 최초 렌더링 시에만 setEventHandler 수행해 이벤트 핸들러 등록
- **/
+/**
+ * @function initialRender
+ * @description 최초 렌더링 시, setEventHandler 호출해 이벤트 핸들러 등록
+ */
 const initialRender = () => {
   setEventHandler();
   render();
 };
 
 /**
- * setState: 컴포넌트 내부 상태 업데이트 하는 과정을 추상화한 함수
+ * @function setState
+ * @param {Object} newState
+ * @description 컴포넌트 내부 상태 업데이트 하는 과정 추상화 함수
+ * 							기존 상태를 복제한 신규 상태 객체를 만든 뒤, 업데이트를 진행하므로 상태의 불변성 유지됨.
+ * 							상태 변화시 변경 전 상태와 변경 후 상태를 console에 출력
  */
 const setState = (newState) => {
   const prevState = componentState;
