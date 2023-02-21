@@ -42,7 +42,6 @@
 
 // REFACTOR
 // TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
-// TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
 // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
 // TODO updateTotal, updateTitle에서 DOM 직접조작 하지 않도록 렌더링 로직 분리하기(추상화 할 때 적용하기)
 
@@ -55,19 +54,25 @@ const BLENDED = "blended";
 const TEAVANA = "teavana";
 const DESSERT = "dessert";
 
-const $ = (selector) => document.querySelector(selector);
-
-/**
- * componentState: 컴포넌트 내부에서 관리하는 상태
- */
-let componentState = {
+const DEFAULT_STATE = {
+  menuList: {
+    [ESPRESSO]: [],
+    [FRAPPUCINO]: [],
+    [BLENDED]: [],
+    [TEAVANA]: [],
+    [DESSERT]: [],
+  },
   tab: ESPRESSO,
 };
+
+const $ = (selector) => document.querySelector(selector);
 
 /**
  * ACTION_TYPES: 액션 타입 명칭
  */
 const INIT_MENU = "init-menu";
+const HYDRATE = "hydrate-menu";
+const CHANGE_TAB = "change-tab";
 const ADD_MENU = "add-menu";
 const UPDATE_MENU = "update-menu";
 const REMOVE_MENU = "remove-menu";
@@ -86,6 +91,8 @@ const actionCreator = (type) => (payload) => {
  * 휴먼 에러 방지 목적
  */
 const createInitAction = actionCreator(INIT_MENU);
+const createHydrateAction = actionCreator(HYDRATE);
+const createChangeTabAction = actionCreator(CHANGE_TAB);
 const createAddAction = actionCreator(ADD_MENU);
 const createUpdateAction = actionCreator(UPDATE_MENU);
 const createRemoveAction = actionCreator(REMOVE_MENU);
@@ -104,7 +111,7 @@ const createStore = (reducer) => {
   let state;
   let callbacks = [];
 
-  dispatch(actionCreator(INIT_MENU, {}));
+  dispatch(createInitAction(getLocalState()));
 
   function dispatch(action) {
     // state 불변성 유지. state는 오직 store 내에서만 변경 가능.
@@ -142,26 +149,9 @@ const saveState = () => {
  * @function getInitState
  * @description localStorage에서 초기 상태값을 가져오는 함수
  */
-const getInitState = () => {
+const getLocalState = () => {
   const savedState = JSON.parse(localStorage.getItem("state"));
-
-  if (savedState !== null) {
-    savedState.tab = ESPRESSO;
-    return savedState;
-  }
-
-  const stateTemplate = {
-    menuList: {
-      [ESPRESSO]: [],
-      [FRAPPUCINO]: [],
-      [BLENDED]: [],
-      [TEAVANA]: [],
-      [DESSERT]: [],
-    },
-    tab: ESPRESSO,
-  };
-
-  return stateTemplate;
+  return savedState;
 };
 
 /**
@@ -170,16 +160,23 @@ const getInitState = () => {
  * @param {Object} action
  * @description state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
  * @todo const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
- * @todo reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
  * @todo 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
+ * @todo INIT_MENU시 localStorage 미변경 문제 해결
  */
-const reducer = (state = getInitState(), action) => {
+const reducer = (state = DEFAULT_STATE, action) => {
   const { type, payload } = action;
   const { tab } = state;
 
   switch (type) {
     case INIT_MENU:
-      return { ...state };
+      if (payload === null) {
+        return { ...state };
+      } else {
+        return { ...payload, tab: ESPRESSO };
+      }
+    case CHANGE_TAB:
+      const { newTab } = payload;
+      return { ...state, tab: newTab };
     case ADD_MENU:
       const { name } = payload;
       const newItem = { name, soldOut: false };
@@ -234,11 +231,11 @@ const reducer = (state = getInitState(), action) => {
  * @description	사용자가 네비게이션 바에서 탭 전환시 탭 상태 변경하는 함수
  */
 const changeTab = (e) => {
-  const { tab: currTab } = componentState;
+  const { tab: currTab } = store.getState();
   const newTab = e.target.dataset.categoryName;
 
   if (currTab === newTab) return;
-  setState({ tab: newTab });
+  store.dispatch(createChangeTabAction({ newTab }));
 };
 
 /**
@@ -350,8 +347,8 @@ const setEventHandler = () => {
  * @description 상단바의 총 메뉴 개수를 업데이트
  */
 const updateTotal = () => {
-  const { menuList } = store.getState();
-  const { tab } = componentState;
+  const { menuList, tab } = store.getState();
+  // const { tab } = componentState;
   const menu = menuList[tab];
   const cnt = $(".menu-count");
   cnt.innerText = `총 ${menu.length}개`;
@@ -362,7 +359,8 @@ const updateTotal = () => {
  * @description 상단바의 메뉴 카테고리명 업데이트
  */
 const updateTitle = () => {
-  const { tab } = componentState;
+  // const { tab } = componentState;
+  const { tab } = store.getState();
   const title = $("h2");
 
   const categories = document.querySelectorAll("nav > button");
@@ -420,8 +418,8 @@ const template = (menu) => {
  * @todo globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어지는 맥락 파악하기
  */
 const render = () => {
-  const { menuList } = store.getState();
-  const { tab } = componentState;
+  const { menuList, tab } = store.getState();
+  // const { tab } = componentState;
   const currTabMenu = menuList[tab];
 
   const list = $("ul");
@@ -448,16 +446,16 @@ const initialRender = () => {
  * 							기존 상태를 복제한 신규 상태 객체를 만든 뒤, 업데이트를 진행하므로 상태의 불변성 유지됨.
  * 							상태 변화시 변경 전 상태와 변경 후 상태를 console에 출력
  */
-const setState = (newState) => {
-  const prevState = componentState;
-  componentState = { ...componentState, ...newState };
-  console.log(
-    `[setState]: \n(prevState) ${JSON.stringify(
-      prevState
-    )} \n(currState) ${JSON.stringify(componentState)}`
-  );
-  render();
-};
+// const setState = (newState) => {
+//   const prevState = componentState;
+//   componentState = { ...componentState, ...newState };
+//   console.log(
+//     `[setState]: \n(prevState) ${JSON.stringify(
+//       prevState
+//     )} \n(currState) ${JSON.stringify(componentState)}`
+//   );
+//   render();
+// };
 
 /**
  * 메인 코드 실행
