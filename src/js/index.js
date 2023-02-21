@@ -41,7 +41,6 @@
 // globalState, ComponentState 변경이 요소 전체가 리렌더링으로 이어질 수 밖에 없는 까닭? state, props, useReducer
 
 // REFACTOR
-// TODO 커링 함수로 변경: 지연 실행
 // TODO const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
 // TODO reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
 // TODO 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
@@ -84,6 +83,7 @@ const actionCreator = (type) => (payload) => {
 
 /**
  * actionCreators
+ * 휴먼 에러 방지 목적
  */
 const createInitAction = actionCreator(INIT_MENU);
 const createAddAction = actionCreator(ADD_MENU);
@@ -119,7 +119,6 @@ const createStore = (reducer) => {
 
   function getState() {
     return state;
-    return { ...state }; // TODO 차이?
   }
 
   // 클로저로 private state, private callbacks 구현해 정보 은닉
@@ -168,7 +167,7 @@ const getInitState = () => {
  * @param {Object} state
  * @param {Object} action
  * @description state를 복제한 객체에 action.type에 따라 상태 변경을 반영한 결과를 반환하는 함수
- * @toddo const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
+ * @todo const로 선언하면 블록 내에서 같은 변수명 재사용 불가 -> 클린 코드?
  * @todo reducer는 디폴트값으로 initialState받을 때, localStorage를 연결하는게 맞을까?
  * @todo 최대한 Flat하게 state를 변경하거나 immutable.js 사용하거나 deepcopy 수행하는 코드로 변경하기
  */
