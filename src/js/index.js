@@ -146,6 +146,7 @@ const getInitState = () => {
   const savedState = JSON.parse(localStorage.getItem("state"));
 
   if (savedState !== null) {
+    savedState.tab = ESPRESSO;
     return savedState;
   }
 
@@ -157,6 +158,7 @@ const getInitState = () => {
       [TEAVANA]: [],
       [DESSERT]: [],
     },
+    tab: ESPRESSO,
   };
 
   return stateTemplate;
@@ -173,7 +175,8 @@ const getInitState = () => {
  */
 const reducer = (state = getInitState(), action) => {
   const { type, payload } = action;
-  const { tab } = componentState;
+  const { tab } = state;
+
   switch (type) {
     case INIT_MENU:
       return { ...state };
