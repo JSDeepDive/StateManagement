@@ -33,7 +33,7 @@ let state = {
 
 /**
  * @function initialRender
- * 1. 최초 렌더링 시, setEventHandler 호출해 이벤트 핸들러 등록
+ * @description 최초 렌더링 시, setEventHandler 호출해 이벤트 핸들러 등록
  */
 const initialRender = () => {
   setEventHandler();
@@ -42,8 +42,7 @@ const initialRender = () => {
 
 /**
  * @function render
- * 1. DOM 요소에 직접 접근해 조작하는 과정을 추상화 함수
- * 2. 페이지 최초 렌더링 시나 컴포넌트 상태 변화시 호출됨
+ * @description DOM 요소에 직접 접근해 조작하는 과정을 추상화 함수
  */
 const render = () => {
   const { menu } = state;
@@ -57,10 +56,11 @@ const render = () => {
 
 /**
  * @function setState
- * 1. 컴포넌트 내부 상태 업데이트 하는 과정 추상화 함수
- * 2. 기존 상태를 복제한 신규 상태 객체를 만든 뒤, 업데이트를 진행하므로 상태의 불변성 유지됨.
- * 3. 상태 변화시 변경 전 상태와 변경 후 상태를 console에 출력
  * @param {Object} newState
+ * @description 컴포넌트 내부 상태 업데이트 하는 과정 추상화 함수
+ * @logic 기존 상태를 복제한 신규 상태 객체를 만든 뒤, 업데이트를 진행하므로 상태의 불변성 유지됨.
+ * @logic 상태 변화시 변경 전 상태와 변경 후 상태를 console에 출력
+ *
  */
 const setState = (newState) => {
   const prevState = state;
@@ -75,7 +75,7 @@ const setState = (newState) => {
 
 /**
  * @function setEventHandler
- * 1. DOM 요소에 직접 접근해 이벤트 핸들러 등록
+ * @description DOM 요소에 직접 접근해 이벤트 핸들러 등록
  */
 function setEventHandler() {
   const form = $("form");
@@ -100,9 +100,8 @@ function setEventHandler() {
 
 /**
  * @function template
- * 1. 렌더링 시 상태에서 메뉴 리스트를 바탕으로 HTML 템플릿을 생성해 리턴하는 함수
  * @param {Object} menu
- *
+ * @description 렌더링 시 상태에서 메뉴 리스트를 바탕으로 HTML 템플릿을 생성해 리턴하는 함수
  */
 function template(menu) {
   return menu
@@ -138,7 +137,7 @@ function template(menu) {
 
 /**
  * @function addMenu
- * 1. 사용자가 input에 메뉴명을 기입한 뒤, enter를 누르거나 제출 버튼을 누른 경우 메뉴를 추가함
+ * @description 사용자가 input에 메뉴명을 기입한 뒤, enter를 누르거나 제출 버튼을 누른 경우 메뉴를 추가함
  */
 function addMenu() {
   const { menu } = state;
@@ -155,8 +154,8 @@ function addMenu() {
 
 /**
  * @function updateMenu
- * 1. 사용자가 수정 버튼을 누른 뒤, confirm에 수정 메뉴 이름을 기입하면, 헤당 메뉴의 이름을 수정함
  * @param {Event} e
+ * @description 사용자가 수정 버튼을 누른 뒤, confirm에 수정 메뉴 이름을 기입하면, 헤당 메뉴의 이름을 수정함
  */
 function updateMenu(e) {
   const { menu } = state;
@@ -179,8 +178,8 @@ function updateMenu(e) {
 
 /**
  * @function removeMenu
- * 1. 사용자가 삭제 버튼을 누르면, 해당 메뉴를 삭제함
  * @param {Event} e
+ * @description 사용자가 삭제 버튼을 누르면, 해당 메뉴를 삭제함
  */
 function removeMenu(e) {
   const { menu } = state;
@@ -198,7 +197,7 @@ function removeMenu(e) {
 
 /**
  * @function updateTotal
- * 1. 상단바의 총 메뉴 개수를 업데이트
+ * @description 상단바의 총 메뉴 개수를 업데이트
  */
 function updateTotal() {
   const { menu } = state;
