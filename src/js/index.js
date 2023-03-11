@@ -22,7 +22,6 @@ function createElem(item, name) {
   span.className = "w-100 pl-2 menu-name";
   span.innerHTML = name;
 
-  // TODO 인자를 전달하는 경우, 이벤트 리스너를 어떻게 삭제해야하는지.
   const edit = document.createElement("button");
   edit.type = "button";
   edit.className = "bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button";
@@ -74,10 +73,17 @@ function updateMenu(span) {
   span.innerHTML = ret;
 }
 
+function removeEventListeners(elements, events, handlers) {
+  elements.forEach((elem, idx) =>
+    elem.removeEventListener(events[idx], handlers[idx])
+  );
+}
+
 function removeMenu(item) {
   const ret = confirm("정말 삭제하시겠습니까?");
   if (!ret) return;
-  list.removeChild(item);
+  $$(item)("span").innerHTML = "삭제한 메뉴";
+  // list.removeChild(item);
 
   // 이벤트 리스너 해제
   removeEventListeners(
@@ -89,12 +95,6 @@ function removeMenu(item) {
   item = null;
   nums -= 1;
   updateTotal();
-}
-
-function removeEventListeners(elements, events, handlers) {
-  elements.forEach((elem, idx) =>
-    elem.removeEventListener(events[idx], handlers[idx])
-  );
 }
 
 function setEventListeners() {
