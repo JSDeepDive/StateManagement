@@ -26,13 +26,13 @@ function createElem(item, name) {
   edit.type = "button";
   edit.className = "bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button";
   edit.innerHTML = "수정";
-  edit.addEventListener("click", updateMenuBind(edit, span));
+  edit.addEventListener("click", bindedUpdateMenu(edit, span));
 
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "bg-gray-50 text-gray-500 text-sm menu-remove-button";
   remove.innerHTML = "삭제";
-  remove.addEventListener("click", removeMenuBind(remove, item));
+  remove.addEventListener("click", bindedRemoveMenu(remove, item));
 
   item.appendChild(span);
   item.appendChild(edit);
@@ -67,6 +67,9 @@ const binder =
 const updateMenuBind = binder(updateMenu);
 const removeMenuBind = binder(removeMenu);
 
+const bindedUpdateMenu = (thisArg, args) => updateMenu.bind(thisArg, args);
+const bindedRemoveMenu = (thisArg, args) => removeMenu.bind(thisArg, args);
+
 function updateMenu(span) {
   const ret = prompt("메뉴명을 수정하세요", span.innerHTML);
   if (ret === null) return;
@@ -86,11 +89,18 @@ function removeMenu(item) {
   // list.removeChild(item);
 
   // 이벤트 리스너 해제
-  removeEventListeners(
-    $$(item)("button"),
-    ["click", "click"],
-    [updateMenuBind, removeMenuBind]
-  );
+  const updateBtn = $$(item)("button")[0];
+  const removeBtn = $$(item)("button")[1];
+
+  console.log(updateBtn, removeBtn);
+  updateBtn.removeEventListener("click", bindedUpdateMenu);
+  removeBtn.removeEventListener("click", bindedRemoveMenu);
+
+  // removeEventListeners(
+  //   $$(item)("button"),
+  //   ["click", "click"],
+  //   [bindedUpdateMenu, bindedRemoveMenu]
+  // );
 
   item = null;
   nums -= 1;
